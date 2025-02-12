@@ -1,0 +1,11 @@
+---
+title: Estimating Colorado's Housing Shortfall
+authors:
+  - name: Greg Totten
+    affiliation: Colorado State Demography Office
+bibliography: references.bib
+---
+
+## Defining The Shortfall
+
+In order to estimate the total housing shortfall in Colorado, we must first define the metrics by which we are going to assess the number of housing units that
