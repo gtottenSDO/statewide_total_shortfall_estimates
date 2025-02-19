@@ -64,7 +64,8 @@ file_loc <- paste0(
   ipums_ddi
 )
   if (file.exists(file_loc)) {
-    acs_00_23 <- read_ipums_ddi(file_loc) |>
+    acs_ddi <- read_ipums_ddi(file_loc)
+    acs_00_23 <- acs_ddi |>
       read_ipums_micro()
   } else {
 acs_00_23 <- define_extract_micro(
@@ -94,19 +95,40 @@ Vacancy rates are calculated based on both the `OWNERSHP` and `VACANCY` variable
 ```{r}
 #| label: ipums_variable_labels
 
-own_tbl <- map(c("OWNERSHP", "VACANCY", "GQ"),
-  (x) ipums_val_labels(!!paste0("acs_00_23$",x)))
-  z|> rename(x = lbl))
-own_tbl
+acs_info <- ipums_var_info(acs_ddi)
+own_tbl <- acs_info %>% 
+  filter(var_name %in% c('OWNERSHP', 'VACANCY', "GQ")) %>% 
+  select(var_name, val_labels) %>% 
+  unnest(val_labels) %>% 
+  unite(val_lbl, c(val,lbl), sep="_") %>% 
+  pivot_wider(names_from = var_name,
+              values_from = val_lbl,
+              values_fill = NA)
+  
+own_tbl |>
+  dplyr::summarise(n = dplyr::n(), .by = c(var_name)) |>
+  dplyr::filter(n > 1L)
 ```
 
 ```{r}
 acs_00_23 |> count(OWNERSHP) 
 
-acs_vacancy <- acs_00_23 |> 
-  mutate(OWNERSHP = lbl_relabel(acs_00_23$OWNERSHP, lbl(0, "Vacant") ~ .val == 0),
-    VACANCY = lbl_relabel(acs_00_23$VACANCY, lbl(0, "Occupied") ~ .val == 0)) |> 
-      filter(GQ < 3 ) |> mutate(across(c(OWNERSHP, VACANCY), as_factor)) |> group_by(YEAR, OWNERSHP, VACANCY) |> tally(wt = HHWT, name = "hh_vacancy") |> group_by(YEAR, OWNERSHP) |> add_tally(wt=hh_vacancy, name = "hh_ownership") |> pivot_wider(names_from = OWNERSHP, values_from = hh_ownership, values_fill = 0) |> ungroup()
+
+acs_vacancy <- acs_00_23 |>
+  mutate(
+    OWNERSHP = lbl_relabel(acs_00_23$OWNERSHP, lbl(0, "Vacant") ~ .val == 0),
+    VACANCY = lbl_relabel(acs_00_23$VACANCY, lbl(0, "Occupied") ~ .val == 0)
+  ) |>
+  filter(GQ < 3) |>
+  mutate(across(c(OWNERSHP, VACANCY), as_factor)) |> 
+  group_by(YEAR, OWNERSHP, VACANCY) |> 
+  tally(wt = HHWT, name = "hh_vacancy") |> 
+  group_by(YEAR, OWNERSHP) |> 
+  add_tally(wt =hh_vacancy, name = "hh_ownership") |> 
+  pivot_wider(names_from = OWNERSHP,
+              values_from = hh_ownership,
+              values_fill = 0) |> 
+  ungroup()
 
 annual_owner_vacancy 
 ```
