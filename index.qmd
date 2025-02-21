@@ -92,18 +92,6 @@ acs_00_23 <- define_extract_micro(
 
 ```
 
-In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data.
-
-```{r}
-#| label: acs-define-survey
-
-acs_srvy <- acs_00_23 |> 
-    as_survey_design(
-      weight = HHWT,
-        repweights = matches("REPWT[0-9]+"),
-        type = "ACS", mse = TRUE)
-```
-
 Vacancy rates are calculated based on both the `OWNERSHP` and `VACANCY` variables. Additionally the `GQ` variable is used to filter out group quarters.
 
 In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents
@@ -148,64 +136,150 @@ acs_var_tbl_gt <- acs_var_tbl |>
   # create spanners based on the column separators defined above
  tab_spanner_delim(delim = "_") |>
   # Replace NA values with empty strings
-  fmt_missing(
+  sub_missing(
     missing_text = ""
   )
 ```
 
 ```{r}
-#| label: fig-pums-vars
+#| label: tbl-pums-vars
+#| tbl-cap: "Values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables."
 
 # display table
 acs_var_tbl_gt
 
 ```
 
-@fig-pums-vars includes the values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables.
+@tbl-pums-vars includes the values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables.
 
 The N/A labels associated with `val=0` for the `OWNERSHP` and `VACANCY` variables is reflective of units which are Vacant, or Occupied, respectively.
 
 Given these values we then need to establish filtering parameters for determining vacancy rates.
 
 1.  `GQ <= 2 OR GQ ==5` filter out GQ units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
-2.  `VACANCY <=2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage as this should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
+2.  `VACANCY <=2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
 3.  Leave Ownership as is.
 
 [^1]: Note to self - review these definitions to see if we want to exclude any of these groupings.
 
-Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2].We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}$ for each occupancy status $o$ and year $t$.
-
-[^2]: For this purpose we make the assumption that `VACANCY == 1` (For rent or sale) is for Rent, and `VACANCY ==2` (For sale only) is for sale in order to the simplify the analysis.
+In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters GQ units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies `VACANCY == 3` to `0` as occupied. Finally, `N/A` values are relabeled for each of the OWNERSHP, and VACANCY variables to reflict that these reflect Vacant and Occupied units, respectively.
 
 ```{r}
 #| label: calc-vacancy
 
-#
-acs_vacancy <- 
-  
-acs_srvy |> 
-  group_by(YEAR, OWNERSHP, VACANCY) |> 
-  summarize(survey_total(VACANCY))
-  
-```
-  
-  acs_00_23 |>
+# create survey design object
+acs_srvy <- acs_00_23 |> 
+    as_survey_design(
+      weight = HHWT,
+        repweights = matches("REPWT[0-9]+"),
+        type = "ACS", mse = TRUE) |> 
+# remove GQ units and vacant units 4-6
+  filter(GQ %in% c(0,1,2,5) & !(VACANCY %in% c(4:6, 7, 9)))  |> 
+  # reclassify 3 to 0 and 4-6 to 3
   mutate(
-    OWNERSHP = lbl_relabel(acs_00_23$OWNERSHP, lbl(0, "Vacant") ~ .val == 0),
-    VACANCY = lbl_relabel(acs_00_23$VACANCY, lbl(0, "Occupied") ~ .val == 0)
-  ) |>
-  filter(GQ %in% c(0,1,2,5) & VACANCY <=2) |>
-  group_by(YEAR) |> 
-  summarize()
-  mutate(across(c(OWNERSHP, VACANCY), as_factor)) |>
-  group_by(YEAR, OWNERSHP, VACANCY) |>
-  tally(wt = HHWT, name = "hh_vacancy") |>
-  group_by(YEAR, OWNERSHP) |>
-  add_tally(wt =hh_vacancy, name = "hh_ownership") |>
-  pivot_wider(names_from = OWNERSHP,
-              values_from = hh_ownership,
-              values_fill = 0) |>
+    VACANCY = lbl_relabel(VACANCY, 0 ~.val == 3),
+    OWNERSHP = lbl_relabel(OWNERSHP, lbl(0, "Vacant") ~ .val == 0)#,
+    #VACANCY = lbl_relabel(VACANCY, lbl(0, "Occupied") ~ .val == 0)
+    )
+
+
+
+```
+
+Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
+
+[^2]: For this purpose we make the assumption that `VACANCY == 1` (For rent or sale) is for Rent, and `VACANCY ==2` (For sale only) is for sale in order to the simplify the analysis.
+
+[^3]: Note to self - verify that margin of error are additive
+
+Once the vacancy rates are calculated, we then calculate the average vacancy rate for each year. To get an annual shortfall we then take the difference between the average vacancy rate and the current vacancy rate. Applying this difference to the total number of units for each year gives us the annual shortfall.
+
+In combining vacancy rates a `tenure` variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value `rent` for `OWNSHP == 2` and `VACANCY == 1`, and `own` for `OWNSHP == 1` and `VACANCY == 2`; consistent with the classifications determined above.
+
+```{r}
+#| label: calc-nahb-vacancy
+
+# calculate vacancy
+acs_vacancy <- acs_srvy |> 
+  group_by(VACANCY, YEAR) |> 
+  survey_count(VACANCY, name = "vac") |> 
+  mutate(
+    vac_moe = vac_se *1.645,
+    tenure = case_when(
+      VACANCY == 1 ~ "rent",
+      VACANCY == 2 ~ "own"
+    )
+  ) |> 
+    filter(!is.na(tenure)) |>
   ungroup()
 
+# calculate occupied
+acs_occupancy <- acs_srvy |> 
+  group_by(OWNERSHP, YEAR) |> 
+  survey_count(OWNERSHP, name = "occ") |> 
+  mutate(
+    occ_moe = occ_se *1.645,
+    tenure = case_when(
+      OWNERSHP == 1 ~ "own",
+      OWNERSHP == 2 ~ "rent"
+    )
+  )|> 
+    filter(!is.na(tenure)) |> 
+  ungroup()
+
+# calculate total occupied and total vacant
+acs_combined_ov <- acs_vacancy |> 
+  select(YEAR, tenure, vac, vac_moe) |>
+  left_join(acs_occupancy |> 
+              select(YEAR, tenure, occ, occ_moe), 
+            by = c("YEAR", "tenure")) %>% # old style pipe needs to be used to pipe . into bind_rows
+  bind_rows(
+    summarize(
+      .,
+    tenure = "total", 
+    across(c(vac:occ_moe), sum),
+    .by = YEAR)
+    ) |> 
+  mutate(
+    total = vac + occ,
+    vac_rate = vac/total
+  ) |> 
+  group_by(tenure) |> 
+  mutate(avg_vac_rate = mean(vac_rate)) |> 
+  ungroup() |>
+  mutate(
+    diff_from_avg = avg_vac_rate - vac_rate,
+    shortfall = diff_from_avg * total)
+
+current_shortfall <- acs_combined_ov |> 
+  filter(YEAR == 2023) |> 
+  select(-YEAR) |> 
+  mutate(tenure = str_to_title(tenure)) |> 
+  gt() |> 
+  fmt_number(c(vac:total, shortfall), decimals = 0) |> 
+  fmt_percent(c(vac_rate:diff_from_avg)) |> 
+  cols_label(
+    tenure = "Tenure", 
+    vac = "Vacant", 
+    vac_moe = "Margin of Error", 
+    occ = "Occupied", 
+    occ_moe = "Margin of Error", 
+    total = "Total", 
+    vac_rate = "Vacancy Rate", 
+    avg_vac_rate = "Average Vacancy Rate", 
+    diff_from_avg = "Difference from Average", 
+    shortfall = "Shortfall"
+  ) |> 
+    cols_align("center")
 
 ```
+
+```{r}
+#| label: tbl-nahb-shortfall
+#| tbl-cap: "Current shortfall of occupied housing units by tenure type using NAHB Methodology."
+
+current_shortfall
+
+```
+
+@tbl-nahb-shortfall contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of 15.4k units for rent and 13.5k units for ownership are determined, for a total shortfall of 27.7k.

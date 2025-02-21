@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.6.40">
+<meta name="generator" content="quarto-1.6.41">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -49,10 +49,10 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-48ffa3e5b9d089919c6712c39e5b00f2.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-a1ff8711b79ae3724c050874b28d9907.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-32162a2fca7cb0439643f2faaab1edf3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script async="" src="https://hypothes.is/embed.js"></script>
 <script>
   window.document.addEventListener("DOMContentLoaded", function (_event) {
@@ -60,6 +60,35 @@ div.csl-indent {
   });
 </script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <meta name="citation_title" content="Estimating Colorado&amp;amp;#039;s Housing Shortfall">
 <meta name="citation_author" content="Greg Totten">
@@ -168,25 +197,32 @@ div.csl-indent {
 <p>The NAHB study estimates the national housing shortage by examining the difference in ACS vacancy rates in the current year from their long run average. This resulted in an estimated shortage of 1.5 million units.</p>
 <p>The first step is to create a time series of vacancy rates for the state with ACS data. This data is accessed from the IPUMS USA database <span class="citation" data-cites="ruggles2024a">(<a href="#ref-ruggles2024a" role="doc-biblioref">Ruggles et al. 2024</a>)</span> using the <code>ipumsr</code> package in R <span class="citation" data-cites="ipumsr">(<a href="#ref-ipumsr" role="doc-biblioref">Greg Freedman Ellis, Derek Burk, and Finn Roberts 2024</a>)</span>.</p>
 <p>Vacancy rates are calculated based on both the <code>OWNERSHP</code> and <code>VACANCY</code> variables. Additionally the <code>GQ</code> variable is used to filter out group quarters.</p>
+<p>In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents</p>
 <div class="cell">
+<div id="tbl-pums-vars" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-pums-vars-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>, <code>VACANCY</code>, and <code>GQ</code> variables.
+</figcaption>
+<div aria-describedby="tbl-pums-vars-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="bhrhegllql" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#bhrhegllql table {
+<div id="ycvrewhhfa" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ycvrewhhfa table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#bhrhegllql thead, #bhrhegllql tbody, #bhrhegllql tfoot, #bhrhegllql tr, #bhrhegllql td, #bhrhegllql th {
+#ycvrewhhfa thead, #ycvrewhhfa tbody, #ycvrewhhfa tfoot, #ycvrewhhfa tr, #ycvrewhhfa td, #ycvrewhhfa th {
   border-style: none;
 }
 
-#bhrhegllql p {
+#ycvrewhhfa p {
   margin: 0;
   padding: 0;
 }
 
-#bhrhegllql .gt_table {
+#ycvrewhhfa .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -212,12 +248,12 @@ div.csl-indent {
   border-left-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_caption {
+#ycvrewhhfa .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#bhrhegllql .gt_title {
+#ycvrewhhfa .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -229,7 +265,7 @@ div.csl-indent {
   border-bottom-width: 0;
 }
 
-#bhrhegllql .gt_subtitle {
+#ycvrewhhfa .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -241,7 +277,7 @@ div.csl-indent {
   border-top-width: 0;
 }
 
-#bhrhegllql .gt_heading {
+#ycvrewhhfa .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -253,13 +289,13 @@ div.csl-indent {
   border-right-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_bottom_border {
+#ycvrewhhfa .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_col_headings {
+#ycvrewhhfa .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -274,7 +310,7 @@ div.csl-indent {
   border-right-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_col_heading {
+#ycvrewhhfa .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -294,7 +330,7 @@ div.csl-indent {
   overflow-x: hidden;
 }
 
-#bhrhegllql .gt_column_spanner_outer {
+#ycvrewhhfa .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -306,15 +342,15 @@ div.csl-indent {
   padding-right: 4px;
 }
 
-#bhrhegllql .gt_column_spanner_outer:first-child {
+#ycvrewhhfa .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#bhrhegllql .gt_column_spanner_outer:last-child {
+#ycvrewhhfa .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#bhrhegllql .gt_column_spanner {
+#ycvrewhhfa .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -326,11 +362,11 @@ div.csl-indent {
   width: 100%;
 }
 
-#bhrhegllql .gt_spanner_row {
+#ycvrewhhfa .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#bhrhegllql .gt_group_heading {
+#ycvrewhhfa .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -356,7 +392,7 @@ div.csl-indent {
   text-align: left;
 }
 
-#bhrhegllql .gt_empty_group_heading {
+#ycvrewhhfa .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -371,15 +407,15 @@ div.csl-indent {
   vertical-align: middle;
 }
 
-#bhrhegllql .gt_from_md > :first-child {
+#ycvrewhhfa .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#bhrhegllql .gt_from_md > :last-child {
+#ycvrewhhfa .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#bhrhegllql .gt_row {
+#ycvrewhhfa .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -398,7 +434,7 @@ div.csl-indent {
   overflow-x: hidden;
 }
 
-#bhrhegllql .gt_stub {
+#ycvrewhhfa .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -411,7 +447,7 @@ div.csl-indent {
   padding-right: 5px;
 }
 
-#bhrhegllql .gt_stub_row_group {
+#ycvrewhhfa .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -425,15 +461,15 @@ div.csl-indent {
   vertical-align: top;
 }
 
-#bhrhegllql .gt_row_group_first td {
+#ycvrewhhfa .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#bhrhegllql .gt_row_group_first th {
+#ycvrewhhfa .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#bhrhegllql .gt_summary_row {
+#ycvrewhhfa .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -443,16 +479,16 @@ div.csl-indent {
   padding-right: 5px;
 }
 
-#bhrhegllql .gt_first_summary_row {
+#ycvrewhhfa .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_first_summary_row.thick {
+#ycvrewhhfa .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#bhrhegllql .gt_last_summary_row {
+#ycvrewhhfa .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -462,7 +498,7 @@ div.csl-indent {
   border-bottom-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_grand_summary_row {
+#ycvrewhhfa .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -472,7 +508,7 @@ div.csl-indent {
   padding-right: 5px;
 }
 
-#bhrhegllql .gt_first_grand_summary_row {
+#ycvrewhhfa .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -482,7 +518,7 @@ div.csl-indent {
   border-top-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_last_grand_summary_row_top {
+#ycvrewhhfa .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -492,11 +528,11 @@ div.csl-indent {
   border-bottom-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_striped {
+#ycvrewhhfa .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#bhrhegllql .gt_table_body {
+#ycvrewhhfa .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -505,7 +541,7 @@ div.csl-indent {
   border-bottom-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_footnotes {
+#ycvrewhhfa .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -519,7 +555,7 @@ div.csl-indent {
   border-right-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_footnote {
+#ycvrewhhfa .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -528,7 +564,7 @@ div.csl-indent {
   padding-right: 5px;
 }
 
-#bhrhegllql .gt_sourcenotes {
+#ycvrewhhfa .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -542,7 +578,7 @@ div.csl-indent {
   border-right-color: #D3D3D3;
 }
 
-#bhrhegllql .gt_sourcenote {
+#ycvrewhhfa .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -550,154 +586,752 @@ div.csl-indent {
   padding-right: 5px;
 }
 
-#bhrhegllql .gt_left {
+#ycvrewhhfa .gt_left {
   text-align: left;
 }
 
-#bhrhegllql .gt_center {
+#ycvrewhhfa .gt_center {
   text-align: center;
 }
 
-#bhrhegllql .gt_right {
+#ycvrewhhfa .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#bhrhegllql .gt_font_normal {
+#ycvrewhhfa .gt_font_normal {
   font-weight: normal;
 }
 
-#bhrhegllql .gt_font_bold {
+#ycvrewhhfa .gt_font_bold {
   font-weight: bold;
 }
 
-#bhrhegllql .gt_font_italic {
+#ycvrewhhfa .gt_font_italic {
   font-style: italic;
 }
 
-#bhrhegllql .gt_super {
+#ycvrewhhfa .gt_super {
   font-size: 65%;
 }
 
-#bhrhegllql .gt_footnote_marks {
+#ycvrewhhfa .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#bhrhegllql .gt_asterisk {
+#ycvrewhhfa .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#bhrhegllql .gt_indent_1 {
+#ycvrewhhfa .gt_indent_1 {
   text-indent: 5px;
 }
 
-#bhrhegllql .gt_indent_2 {
+#ycvrewhhfa .gt_indent_2 {
   text-indent: 10px;
 }
 
-#bhrhegllql .gt_indent_3 {
+#ycvrewhhfa .gt_indent_3 {
   text-indent: 15px;
 }
 
-#bhrhegllql .gt_indent_4 {
+#ycvrewhhfa .gt_indent_4 {
   text-indent: 20px;
 }
 
-#bhrhegllql .gt_indent_5 {
+#ycvrewhhfa .gt_indent_5 {
   text-indent: 25px;
 }
 
-#bhrhegllql .katex-display {
+#ycvrewhhfa .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#bhrhegllql div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#ycvrewhhfa div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
 
-<table class="gt_table caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<table class="gt_table do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
 <thead>
-<tr class="gt_col_headings header">
-<th id="GQ" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">GQ</th>
-<th id="OWNERSHP" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">OWNERSHP</th>
-<th id="VACANCY" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">VACANCY</th>
+<tr class="gt_col_headings gt_spanner_row header">
+<th colspan="2" id="spanner-OWNERSHP_val" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+OWNERSHP
+</div></th>
+<th colspan="2" id="spanner-VACANCY_val" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+VACANCY
+</div></th>
+<th colspan="2" id="spanner-GQ_val" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+GQ
+</div></th>
+</tr>
+<tr class="gt_col_headings even">
+<th id="OWNERSHP_val" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">val</th>
+<th id="OWNERSHP_lbl" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">lbl</th>
+<th id="VACANCY_val" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">val</th>
+<th id="VACANCY_lbl" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">lbl</th>
+<th id="GQ_val" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">val</th>
+<th id="GQ_lbl" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">lbl</th>
 </tr>
 </thead>
 <tbody class="gt_table_body">
 <tr class="odd">
-<td class="gt_row gt_left" headers="GQ">0_Vacant unit</td>
-<td class="gt_row gt_left" headers="OWNERSHP">0_N/A</td>
-<td class="gt_row gt_left" headers="VACANCY">0_N/A</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val">0</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl">N/A</td>
+<td class="gt_row gt_right" headers="VACANCY_val">0</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">N/A</td>
+<td class="gt_row gt_right" headers="GQ_val">0</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Vacant unit</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="GQ">1_Households under 1970 definition</td>
-<td class="gt_row gt_left" headers="OWNERSHP">1_Owned or being bought (loan)</td>
-<td class="gt_row gt_left" headers="VACANCY">1_For rent or sale</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val">1</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl">Owned or being bought (loan)</td>
+<td class="gt_row gt_right" headers="VACANCY_val">1</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For rent or sale</td>
+<td class="gt_row gt_right" headers="GQ_val">1</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Households under 1970 definition</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="GQ">2_Additional households under 1990 definition</td>
-<td class="gt_row gt_left" headers="OWNERSHP">2_Rented</td>
-<td class="gt_row gt_left" headers="VACANCY">2_For sale only</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val">2</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl">Rented</td>
+<td class="gt_row gt_right" headers="VACANCY_val">2</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For sale only</td>
+<td class="gt_row gt_right" headers="GQ_val">2</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Additional households under 1990 definition</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="GQ">3_Group quarters--Institutions</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">3_Rented or sold but not (yet) occupied</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">3</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">Rented or sold but not (yet) occupied</td>
+<td class="gt_row gt_right" headers="GQ_val">3</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Group quarters--Institutions</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="GQ">4_Other group quarters</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">4_For seasonal, recreational or other occasional use</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">4</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For seasonal, recreational or other occasional use</td>
+<td class="gt_row gt_right" headers="GQ_val">4</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Other group quarters</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="GQ">5_Additional households under 2000 definition</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">5_For occasional use</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">5</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For occasional use</td>
+<td class="gt_row gt_right" headers="GQ_val">5</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Additional households under 2000 definition</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="GQ">6_Fragment</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">6_For seasonal use</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">6</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For seasonal use</td>
+<td class="gt_row gt_right" headers="GQ_val">6</td>
+<td class="gt_row gt_left" headers="GQ_lbl">Fragment</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="GQ">NA</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">7_For migrant farm workers</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">7</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For migrant farm workers</td>
+<td class="gt_row gt_right" headers="GQ_val"><br>
+</td>
+<td class="gt_row gt_left" headers="GQ_lbl"><br>
+</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="GQ">NA</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">8_For seasonal use or migratory</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">8</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">For seasonal use or migratory</td>
+<td class="gt_row gt_right" headers="GQ_val"><br>
+</td>
+<td class="gt_row gt_left" headers="GQ_lbl"><br>
+</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="GQ">NA</td>
-<td class="gt_row gt_left" headers="OWNERSHP">NA</td>
-<td class="gt_row gt_left" headers="VACANCY">9_Other vacant</td>
+<td class="gt_row gt_right" headers="OWNERSHP_val"><br>
+</td>
+<td class="gt_row gt_left" headers="OWNERSHP_lbl"><br>
+</td>
+<td class="gt_row gt_right" headers="VACANCY_val">9</td>
+<td class="gt_row gt_left" headers="VACANCY_lbl">Other vacant</td>
+<td class="gt_row gt_right" headers="GQ_val"><br>
+</td>
+<td class="gt_row gt_left" headers="GQ_lbl"><br>
+</td>
 </tr>
 </tbody>
 </table>
 
 </div>
 </div>
+</div>
+</figure>
+</div>
 <a class="quarto-notebook-link" id="nblink-1" href="index-preview.html">Source: Article Notebook</a></div>
-<div class="cell" data-execute="false">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 2
-  OWNERSHP                              n
-  &lt;int+lbl&gt;                         &lt;int&gt;
-1 0 [N/A]                           82030
-2 1 [Owned or being bought (loan)] 369311
-3 2 [Rented]                       143978</code></pre>
+<p><a href="#tbl-pums-vars" class="quarto-xref">Table&nbsp;1</a> includes the values and respective labels for each of the <code>OWNERSHP</code>, <code>VACANCY</code>, and <code>GQ</code> variables.</p>
+<p>The N/A labels associated with <code>val=0</code> for the <code>OWNERSHP</code> and <code>VACANCY</code> variables is reflective of units which are Vacant, or Occupied, respectively.</p>
+<p>Given these values we then need to establish filtering parameters for determining vacancy rates.</p>
+<ol type="1">
+<li><code>GQ &lt;= 2 OR GQ ==5</code> filter out GQ units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</li>
+<li><code>VACANCY &lt;=2</code> Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify <code>3</code> - Rented or sold but not (yet) occupied to <code>0</code> as occupied.</li>
+<li>Leave Ownership as is.</li>
+</ol>
+<p>In order to broadly analyze survey data, and additionally calculate margin of error, the <code>srvyr</code> package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters GQ units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies <code>VACANCY == 3</code> to <code>0</code> as occupied. Finally, <code>N/A</code> values are relabeled for each of the OWNERSHP, and VACANCY variables to reflict that these reflect Vacant and Occupied units, respectively.</p>
+<p>Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>[^margin of error are calculated as 1.645 * standard error consistent with 90% CI]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as <span class="math inline">\(\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}\)</span> for each occupancy status <span class="math inline">\(o\)</span> and year <span class="math inline">\(t\)</span>. Finally we calculate the sum total of occupied and vacant units for each year<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>Once the vacancy rates are calculated, we then calculate the average vacancy rate for each year. To get an annual shortfall we then take the difference between the average vacancy rate and the current vacancy rate. Applying this difference to the total number of units for each year gives us the annual shortfall.</p>
+<p>In combining vacancy rates a <code>tenure</code> variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value <code>rent</code> for <code>OWNSHP == 2</code> and <code>VACANCY == 1</code>, and <code>own</code> for <code>OWNSHP == 1</code> and <code>VACANCY == 2</code>; consistent with the classifications determined above.</p>
+<div class="cell">
+<div id="tbl-nahb-shortfall" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-nahb-shortfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Current shortfall of occupied housing units by tenure type using NAHB Methodology.
+</figcaption>
+<div aria-describedby="tbl-nahb-shortfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="lizwybjyfi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#lizwybjyfi table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#lizwybjyfi thead, #lizwybjyfi tbody, #lizwybjyfi tfoot, #lizwybjyfi tr, #lizwybjyfi td, #lizwybjyfi th {
+  border-style: none;
+}
+
+#lizwybjyfi p {
+  margin: 0;
+  padding: 0;
+}
+
+#lizwybjyfi .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#lizwybjyfi .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#lizwybjyfi .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#lizwybjyfi .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#lizwybjyfi .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#lizwybjyfi .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#lizwybjyfi .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#lizwybjyfi .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#lizwybjyfi .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#lizwybjyfi .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#lizwybjyfi .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#lizwybjyfi .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#lizwybjyfi .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#lizwybjyfi .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#lizwybjyfi .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lizwybjyfi .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#lizwybjyfi .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#lizwybjyfi .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#lizwybjyfi .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lizwybjyfi .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#lizwybjyfi .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lizwybjyfi .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#lizwybjyfi .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lizwybjyfi .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lizwybjyfi .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lizwybjyfi .gt_left {
+  text-align: left;
+}
+
+#lizwybjyfi .gt_center {
+  text-align: center;
+}
+
+#lizwybjyfi .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#lizwybjyfi .gt_font_normal {
+  font-weight: normal;
+}
+
+#lizwybjyfi .gt_font_bold {
+  font-weight: bold;
+}
+
+#lizwybjyfi .gt_font_italic {
+  font-style: italic;
+}
+
+#lizwybjyfi .gt_super {
+  font-size: 65%;
+}
+
+#lizwybjyfi .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#lizwybjyfi .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#lizwybjyfi .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#lizwybjyfi .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#lizwybjyfi .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#lizwybjyfi .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#lizwybjyfi .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#lizwybjyfi .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#lizwybjyfi div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="tenure" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Tenure</th>
+<th id="vac" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Vacant</th>
+<th id="vac_moe" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Margin of Error</th>
+<th id="occ" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Occupied</th>
+<th id="occ_moe" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Margin of Error</th>
+<th id="total" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Total</th>
+<th id="vac_rate" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Vacancy Rate</th>
+<th id="avg_vac_rate" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Average Vacancy Rate</th>
+<th id="diff_from_avg" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Difference from Average</th>
+<th id="shortfall" class="gt_col_heading gt_columns_bottom_border gt_center" data-quarto-table-cell-role="th" scope="col">Shortfall</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_center" headers="tenure">Rent</td>
+<td class="gt_row gt_center" headers="vac">41,901</td>
+<td class="gt_row gt_center" headers="vac_moe">5,192</td>
+<td class="gt_row gt_center" headers="occ">835,314</td>
+<td class="gt_row gt_center" headers="occ_moe">22,166</td>
+<td class="gt_row gt_center" headers="total">877,215</td>
+<td class="gt_row gt_center" headers="vac_rate">4.78%</td>
+<td class="gt_row gt_center" headers="avg_vac_rate">6.53%</td>
+<td class="gt_row gt_center" headers="diff_from_avg">1.76%</td>
+<td class="gt_row gt_center" headers="shortfall">15,414</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_center" headers="tenure">Own</td>
+<td class="gt_row gt_center" headers="vac">12,816</td>
+<td class="gt_row gt_center" headers="vac_moe">2,753</td>
+<td class="gt_row gt_center" headers="occ">1,592,949</td>
+<td class="gt_row gt_center" headers="occ_moe">24,524</td>
+<td class="gt_row gt_center" headers="total">1,605,765</td>
+<td class="gt_row gt_center" headers="vac_rate">0.80%</td>
+<td class="gt_row gt_center" headers="avg_vac_rate">1.64%</td>
+<td class="gt_row gt_center" headers="diff_from_avg">0.84%</td>
+<td class="gt_row gt_center" headers="shortfall">13,549</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_center" headers="tenure">Total</td>
+<td class="gt_row gt_center" headers="vac">54,717</td>
+<td class="gt_row gt_center" headers="vac_moe">7,945</td>
+<td class="gt_row gt_center" headers="occ">2,428,263</td>
+<td class="gt_row gt_center" headers="occ_moe">46,690</td>
+<td class="gt_row gt_center" headers="total">2,482,980</td>
+<td class="gt_row gt_center" headers="vac_rate">2.20%</td>
+<td class="gt_row gt_center" headers="avg_vac_rate">3.32%</td>
+<td class="gt_row gt_center" headers="diff_from_avg">1.12%</td>
+<td class="gt_row gt_center" headers="shortfall">27,699</td>
+</tr>
+</tbody>
+</table>
+
 </div>
 </div>
+</div>
+</figure>
+</div>
+</div>
+<p><a href="#tbl-nahb-shortfall" class="quarto-xref">Table&nbsp;2</a> contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of 15.4k units for rent and 13.5k units for ownership are determined, for a total shortfall of 27.7k.</p>
 
 </section>
 </section>
+
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-ipumsr" class="csl-entry" role="listitem">
@@ -709,7 +1343,14 @@ McCue, Daniel;, and Sophie Huang. 2024. <span>“Estimating the National Housing
 <div id="ref-ruggles2024a" class="csl-entry" role="listitem">
 Ruggles, Steven, Sarah Flood, Matthew Sobek, Daniel Backman, Annie Chen, Grace Cooper, Stephanie Richards, Renae Rodgers, and Megan Schouweiler. 2024. <span>“IPUMS USA: Version 15.0.”</span> Minneapolis, MN: IPUMS. <a href="https://doi.org/10.18128/D010.V15.0">https://doi.org/10.18128/D010.V15.0</a>.
 </div>
-</div></section></div></main>
+</div></section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>Note to self - review these definitions to see if we want to exclude any of these groupings.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>For this purpose we make the assumption that <code>VACANCY == 1</code> (For rent or sale) is for Rent, and <code>VACANCY ==2</code> (For sale only) is for sale in order to the simplify the analysis.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Note to self - verify that margin of error are additive<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
