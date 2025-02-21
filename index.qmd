@@ -14,6 +14,7 @@ library(ipumsr)
 library(duckplyr)
 library(tidycensus)
 library(gt)
+library(srvyr)
 ```
 
 ## Defining The Shortfall
@@ -54,11 +55,11 @@ The first step is to create a time series of vacancy rates for the state with AC
 #| label: ipums_load_data
 
 acs_samples <- get_sample_info("usa") |>
-  filter(str_detect(name, pattern = "us20d{2}a")) |>
+  filter(str_detect(name, pattern = "20\\d+a$")) |> 
   pull(name)
 
 ipums_dir <- "data/ipums_raw/"
-ipums_ddi <- "usa_00075.xml"
+ipums_ddi <- "usa_00080.xml"
 file_loc <- paste0(
   ipums_dir,
   ipums_ddi
@@ -78,7 +79,8 @@ acs_00_23 <- define_extract_micro(
         "PUMA",
         "GQ",
         "OWNERSHP",
-        "VACANCY"
+        "VACANCY",
+        "REPWT"
       ),
       data_structure = "household_only"
     ) |>
@@ -90,45 +92,120 @@ acs_00_23 <- define_extract_micro(
 
 ```
 
+In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data.
+
+```{r}
+#| label: acs-define-survey
+
+acs_srvy <- acs_00_23 |> 
+    as_survey_design(
+      weight = HHWT,
+        repweights = matches("REPWT[0-9]+"),
+        type = "ACS", mse = TRUE)
+```
+
 Vacancy rates are calculated based on both the `OWNERSHP` and `VACANCY` variables. Additionally the `GQ` variable is used to filter out group quarters.
+
+In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents
 
 ```{r}
 #| label: ipums_variable_labels
 
+# create acs_info from the DDI which includes variable information
 acs_info <- ipums_var_info(acs_ddi)
-own_tbl <- acs_info %>% 
-  filter(var_name %in% c('OWNERSHP', 'VACANCY', "GQ")) %>% 
-  select(var_name, val_labels) %>% 
-  unnest(val_labels) %>% 
-  unite(val_lbl, c(val,lbl), sep="_") %>% 
+
+# generate table with variable information
+# table will include columns {VAR}_val, and {VAR}_lbl with the value and
+# label for each variable. This is setup so tab_spanner_delim can be used to
+# separate out columns in a GT table
+acs_var_tbl <- acs_info |>
+  # only include necessary variables
+  filter(var_name %in% c('OWNERSHP', 'VACANCY', "GQ")) |>
+  # remove other columns
+  select(var_name, val_labels) |>
+  # unnest labels from nested columns
+  unnest(val_labels) |>
+  # group by var_name for generating row numbers to unpivot without lists
+  group_by(var_name) |>
+  # add row_numbers
+  mutate(row = row_number()) |>
+  ungroup() |> 
+  # pivot wider to generate table
   pivot_wider(names_from = var_name,
-              values_from = val_lbl,
-              values_fill = NA)
-  
-own_tbl |>
-  dplyr::summarise(n = dplyr::n(), .by = c(var_name)) |>
-  dplyr::filter(n > 1L)
+              values_from = c(val, lbl),
+              # specify order of variable then val/lbl column
+              names_glue = "{var_name}_{.value}",
+              # use slowest so variables are grouped together
+              names_vary = "slowest") |>
+  # remove row index as no longer necessary
+  select(-row) |> 
+  # move GQ to end
+  relocate(starts_with("GQ"), .after = last_col())
+
+# create GT table with information
+acs_var_tbl_gt <- acs_var_tbl |>
+  gt() |> 
+  # create spanners based on the column separators defined above
+ tab_spanner_delim(delim = "_") |>
+  # Replace NA values with empty strings
+  fmt_missing(
+    missing_text = ""
+  )
 ```
 
 ```{r}
-acs_00_23 |> count(OWNERSHP) 
+#| label: fig-pums-vars
 
+# display table
+acs_var_tbl_gt
 
-acs_vacancy <- acs_00_23 |>
+```
+
+@fig-pums-vars includes the values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables.
+
+The N/A labels associated with `val=0` for the `OWNERSHP` and `VACANCY` variables is reflective of units which are Vacant, or Occupied, respectively.
+
+Given these values we then need to establish filtering parameters for determining vacancy rates.
+
+1.  `GQ <= 2 OR GQ ==5` filter out GQ units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
+2.  `VACANCY <=2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage as this should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
+3.  Leave Ownership as is.
+
+[^1]: Note to self - review these definitions to see if we want to exclude any of these groupings.
+
+Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2].We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}$ for each occupancy status $o$ and year $t$.
+
+[^2]: For this purpose we make the assumption that `VACANCY == 1` (For rent or sale) is for Rent, and `VACANCY ==2` (For sale only) is for sale in order to the simplify the analysis.
+
+```{r}
+#| label: calc-vacancy
+
+#
+acs_vacancy <- 
+  
+acs_srvy |> 
+  group_by(YEAR, OWNERSHP, VACANCY) |> 
+  summarize(survey_total(VACANCY))
+  
+```
+  
+  acs_00_23 |>
   mutate(
     OWNERSHP = lbl_relabel(acs_00_23$OWNERSHP, lbl(0, "Vacant") ~ .val == 0),
     VACANCY = lbl_relabel(acs_00_23$VACANCY, lbl(0, "Occupied") ~ .val == 0)
   ) |>
-  filter(GQ < 3) |>
-  mutate(across(c(OWNERSHP, VACANCY), as_factor)) |> 
-  group_by(YEAR, OWNERSHP, VACANCY) |> 
-  tally(wt = HHWT, name = "hh_vacancy") |> 
-  group_by(YEAR, OWNERSHP) |> 
-  add_tally(wt =hh_vacancy, name = "hh_ownership") |> 
+  filter(GQ %in% c(0,1,2,5) & VACANCY <=2) |>
+  group_by(YEAR) |> 
+  summarize()
+  mutate(across(c(OWNERSHP, VACANCY), as_factor)) |>
+  group_by(YEAR, OWNERSHP, VACANCY) |>
+  tally(wt = HHWT, name = "hh_vacancy") |>
+  group_by(YEAR, OWNERSHP) |>
+  add_tally(wt =hh_vacancy, name = "hh_ownership") |>
   pivot_wider(names_from = OWNERSHP,
               values_from = hh_ownership,
-              values_fill = 0) |> 
+              values_fill = 0) |>
   ungroup()
 
-annual_owner_vacancy 
+
 ```
