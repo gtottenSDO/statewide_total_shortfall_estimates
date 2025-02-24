@@ -280,6 +280,16 @@ current_shortfall <- acs_combined_ov |>
 
 current_shortfall
 
+# define get_shortfall function to return shortfall based on tenure and format data
+extract_shortfall <- function (ten_type) {
+  current_shortfall |> 
+    fmt_number(
+      decimals = 1,
+      suffixing = "K") |> 
+    extract_cells(shortfall, rows = tenure == ten_type)
+}
+
+
 ```
 
-@tbl-nahb-shortfall contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of 15.4k units for rent and 13.5k units for ownership are determined, for a total shortfall of 27.7k.
+@tbl-nahb-shortfall contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of `r extract_shortfall("Rent")` units for rent and `r extract_shortfall("Own")` units for ownership are determined, for a total shortfall of `r extract_shortfall("Total")`^[Note: the Total shortfall is less than the sum of the own and vacant shortfalls due to differences as vacancy rates are determined by tenure.].
