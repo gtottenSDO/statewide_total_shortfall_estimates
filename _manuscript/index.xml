@@ -1,0 +1,1192 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving
+and Interchange DTD v1.2 20190208//EN" "JATS-archivearticle1.dtd">
+
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.2" article-type="other">
+
+<front>
+
+
+<article-meta>
+
+
+<title-group>
+<article-title>Estimating Colorado’s Housing Shortfall</article-title>
+</title-group>
+
+<contrib-group>
+<contrib contrib-type="author">
+<name>
+<surname>Totten</surname>
+<given-names>Greg</given-names>
+</name>
+<string-name>Greg Totten</string-name>
+
+<xref ref-type="aff" rid="aff-1">a</xref>
+</contrib>
+</contrib-group>
+<aff id="aff-1">
+<institution-wrap>
+<institution>Colorado State Demography Office</institution>
+</institution-wrap>
+
+
+
+
+
+
+
+</aff>
+
+
+
+
+
+
+
+
+
+<history></history>
+
+
+
+
+
+
+</article-meta>
+
+</front>
+
+<body>
+<sec id="defining-the-shortfall">
+  <title>Defining The Shortfall</title>
+  <p>In order to estimate the total housing shortfall in Colorado, we
+  must first define the metrics by which we are going to assess the
+  number of housing units the state might be short.</p>
+  <p>How these metrics are defined can have a significant impact on the
+  resulting analysis. As a highly stylized example to demonstrate this
+  concept let’s begin by using two examples to bound our estimates:</p>
+  <list list-type="order">
+    <list-item>
+      <p>Every person currently residing in the state does so inside of
+      a permanent housing unit. In this scenario we would have a
+      relatively low estimate of the total number of necessary housing
+      units - as what would be required is enough units to house the
+      state’s unhoused population. In this case the estimate of number
+      housing units might just be the estimate of the number of people
+      in this population. However, this could be reduced by changing our
+      requirements of housing to include any shelter - such as tents as
+      vehicles, which would likely bring the estimated much lower.</p>
+    </list-item>
+    <list-item>
+      <p>Every current US resident who would like to live in Colorado
+      may do so, and they will be able to do so for free. Conversely, in
+      this scenario we might expect an estimate that is quite high, as
+      while some people still may opt not to reside in our beautiful
+      state (perhaps they do not particularly like sun), we could
+      reasonably expect many Americans, perhaps into the hundreds of
+      millions, might opt to spend no money to live in our beautiful
+      state.</p>
+    </list-item>
+  </list>
+  <p>In between these two estimates are a range of scenarios that might
+  be indicative of the number of housing units which are necessary -
+  based on the objectives we are trying to determine, and the underlying
+  assumptions about housing preferences which underlie them. In this
+  paper we will examine a variety of methods, based primarily on studies
+  by other researchers, that we can apply to Colorado to determine the
+  estimated housing shortfall in the state, under that method. In this
+  way we will provide not so much a point estimate of the total housing
+  shortfall, but a range of estimates which can be utilized by planners
+  and policy makers based on their discretion with respect to the
+  reasonableness and applicability of each method. In doing so we also
+  hope to plan a clear, concise, explanation of the method, what
+  objective it is attempting to solve for, and the meaning of the
+  estimate within that context.</p>
+</sec>
+<sec id="data">
+  <title>Data</title>
+  <p>Data primarily comes from the most recent American Community Survey
+  (“ACS”) one year estimates for Colorado, and data from the Colorado
+  State Demography Office (“SDO”). One year ACS estimates are primarily
+  used as the population of the state is large enough to allow for the
+  use of such estimates. If applying similar methodologies at smaller
+  geography levels (such as county level), it may be necessary to
+  instead use 5 year estimates. Additionally, some methods of deriving
+  estimates, such as by analyzing Public Use Microdata Sample (“PUMS”)
+  data may not be possible for all methods. As such many methods
+  determined here may only be applicable at the state level.</p>
+</sec>
+<sec id="examples">
+  <title>Examples</title>
+  <sec id="harvard-joint-center-for-housing-studies-blog">
+    <title>Harvard Joint Center for Housing Studies Blog</title>
+    <p>One resource that compares four relatively recent national
+    studies attempting to determine housing shortfalls are a January
+    2024 blog entry from the Harvard Joint Center for Housing Studies
+    (“JHCS”)
+    (<xref alt="McCue and Huang 2024" rid="ref-mccue2024" ref-type="bibr">McCue
+    and Huang 2024</xref>). The four studies each utilize different
+    methodologies and resulting estimates covering different years. The
+    four studies are:</p>
+    <list list-type="order">
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.freddiemac.com/research/insight/20210507-housing-supply">National
+        Association of Home Builders (NAHB) 2021</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.freddiemac.com/research/insight/20210507-housing-supply">Freddie
+        Mac 2020</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.nar.realtor/advocacy/housing-is-critical-infrastructure">National
+        Association of Realtors (NAR) 2021</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://nlihc.org/gap">National
+        Low Income Housing Coalition (NLIHC)</ext-link></p>
+      </list-item>
+    </list>
+    <p>The following sections will provide estimates of the housing
+    shortage in Colorado based on each of these study methodologies.</p>
+  </sec>
+  <sec id="national-association-of-home-builders">
+    <title>National Association of Home Builders</title>
+    <p>The NAHB study estimates the national housing shortage by
+    examining the difference in ACS vacancy rates in the current year
+    from their long run average. This resulted in an estimated shortage
+    of 1.5 million units.</p>
+    <p>The first step is to create a time series of vacancy rates for
+    the state with ACS data. This data is accessed from the IPUMS USA
+    database
+    (<xref alt="Ruggles et al. 2024" rid="ref-ruggles2024a" ref-type="bibr">Ruggles
+    et al. 2024</xref>) using the <monospace>ipumsr</monospace> package
+    in R
+    (<xref alt="Greg Freedman Ellis, Derek Burk, and Finn Roberts 2024" rid="ref-ipumsr" ref-type="bibr">Greg
+    Freedman Ellis, Derek Burk, and Finn Roberts 2024</xref>).</p>
+    <p>Vacancy rates are calculated based on both the
+    <monospace>OWNERSHP</monospace> and <monospace>VACANCY</monospace>
+    variables. Additionally the <monospace>GQ</monospace> variable is
+    used to filter out group quarters.</p>
+    <p>In order to calculate vacancy rates it is necessary to first
+    understand what each of the values for each variable represents</p>
+    <fig id="tbl-pums-vars">
+      <caption><p>Table 1: Values and respective labels for each of the
+      <monospace>OWNERSHP</monospace>, <monospace>VACANCY</monospace>,
+      and <monospace>GQ</monospace> variables.</p></caption>
+      <table-wrap>
+        <table>
+          <colgroup>
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="2" id="spanner-OWNERSHP_val" scope="colgroup">OWNERSHP</th>
+              <th colspan="2" id="spanner-VACANCY_val" scope="colgroup">VACANCY</th>
+              <th colspan="2" id="spanner-GQ_val" scope="colgroup">GQ</th>
+            </tr>
+            <tr>
+              <th id="OWNERSHP_val" scope="col">val</th>
+              <th id="OWNERSHP_lbl" scope="col">lbl</th>
+              <th id="VACANCY_val" scope="col">val</th>
+              <th id="VACANCY_lbl" scope="col">lbl</th>
+              <th id="GQ_val" scope="col">val</th>
+              <th id="GQ_lbl" scope="col">lbl</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td headers="OWNERSHP_val">0</td>
+              <td headers="OWNERSHP_lbl">N/A</td>
+              <td headers="VACANCY_val">0</td>
+              <td headers="VACANCY_lbl">N/A</td>
+              <td headers="GQ_val">0</td>
+              <td headers="GQ_lbl">Vacant unit</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val">1</td>
+              <td headers="OWNERSHP_lbl">Owned or being bought
+              (loan)</td>
+              <td headers="VACANCY_val">1</td>
+              <td headers="VACANCY_lbl">For rent or sale</td>
+              <td headers="GQ_val">1</td>
+              <td headers="GQ_lbl">Households under 1970 definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val">2</td>
+              <td headers="OWNERSHP_lbl">Rented</td>
+              <td headers="VACANCY_val">2</td>
+              <td headers="VACANCY_lbl">For sale only</td>
+              <td headers="GQ_val">2</td>
+              <td headers="GQ_lbl">Additional households under 1990
+              definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">3</td>
+              <td headers="VACANCY_lbl">Rented or sold but not (yet)
+              occupied</td>
+              <td headers="GQ_val">3</td>
+              <td headers="GQ_lbl">Group quarters--Institutions</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">4</td>
+              <td headers="VACANCY_lbl">For seasonal, recreational or
+              other occasional use</td>
+              <td headers="GQ_val">4</td>
+              <td headers="GQ_lbl">Other group quarters</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">5</td>
+              <td headers="VACANCY_lbl">For occasional use</td>
+              <td headers="GQ_val">5</td>
+              <td headers="GQ_lbl">Additional households under 2000
+              definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">6</td>
+              <td headers="VACANCY_lbl">For seasonal use</td>
+              <td headers="GQ_val">6</td>
+              <td headers="GQ_lbl">Fragment</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">7</td>
+              <td headers="VACANCY_lbl">For migrant farm workers</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">8</td>
+              <td headers="VACANCY_lbl">For seasonal use or
+              migratory</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">9</td>
+              <td headers="VACANCY_lbl">Other vacant</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </fig>
+    <p><xref alt="Table 1" rid="tbl-pums-vars">Table 1</xref> includes
+    the values and respective labels for each of the
+    <monospace>OWNERSHP</monospace>, <monospace>VACANCY</monospace>, and
+    <monospace>GQ</monospace> variables.</p>
+    <p>The N/A labels associated with <monospace>val=0</monospace> for
+    the <monospace>OWNERSHP</monospace> and
+    <monospace>VACANCY</monospace> variables is reflective of units
+    which are Vacant, or Occupied, respectively.</p>
+    <p>Given these values we then need to establish filtering parameters
+    for determining vacancy rates.</p>
+    <list list-type="order">
+      <list-item>
+        <p><monospace>GQ &lt;= 2 OR GQ ==5</monospace> filter out GQ
+        units to only included Households and Vacant Units (including
+        with the 1990 and 2000 Additional Unit
+        definitions)<xref ref-type="fn" rid="fn1">1</xref>.</p>
+      </list-item>
+      <list-item>
+        <p><monospace>VACANCY &lt;=2</monospace> Remove
+        occasional/seasonal vacant units (4-6) consistent with NAHB
+        analysis. Remove migrant farm worker usage (7), and other vacant
+        (9), as these should be relatively independent of overall
+        vacancy rates. Reclassify <monospace>3</monospace> - Rented or
+        sold but not (yet) occupied to <monospace>0</monospace> as
+        occupied.</p>
+      </list-item>
+      <list-item>
+        <p>Leave Ownership as is.</p>
+      </list-item>
+    </list>
+    <p>In order to broadly analyze survey data, and additionally
+    calculate margin of error, the <monospace>srvyr</monospace> package
+    is used. Prior to analysis a survey object must be defined based on
+    the extracted ACS data. This survey object filters GQ units based on
+    condition 1 above, and removes vacant units based on condition 2
+    above. Additionally, it reclassifies
+    <monospace>VACANCY == 3</monospace> to <monospace>0</monospace> as
+    occupied. Finally, <monospace>N/A</monospace> values are relabeled
+    for each of the OWNERSHP, and VACANCY variables to reflict that
+    these reflect Vacant and Occupied units, respectively.</p>
+    <p>Then total up on an annual basis the total occupied units each
+    for sale and for rent, as well as vacant units by for sale or for
+    rent<xref ref-type="fn" rid="fn2">2</xref>[^margin of error are
+    calculated as 1.645 * standard error consistent with 90% CI]. We
+    additionally calculate total occupied and total vacant as the sum of
+    each of these. Vacancy rates are then calculated as
+    <inline-formula><tex-math><![CDATA[\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}]]></tex-math></inline-formula>
+    for each occupancy status <inline-formula><alternatives>
+    <tex-math><![CDATA[o]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>o</mml:mi></mml:math></alternatives></inline-formula>
+    and year <inline-formula><alternatives>
+    <tex-math><![CDATA[t]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>t</mml:mi></mml:math></alternatives></inline-formula>.
+    Finally we calculate the sum total of occupied and vacant units for
+    each year<xref ref-type="fn" rid="fn3">3</xref>.</p>
+    <p>Once the vacancy rates are calculated, we then calculate the
+    average vacancy rate for each year. To get an annual shortfall we
+    then take the difference between the average vacancy rate and the
+    current vacancy rate. Applying this difference to the total number
+    of units for each year gives us the annual shortfall.</p>
+    <p>In combining vacancy rates a <monospace>tenure</monospace>
+    variable is created to determine if a unit is determined to be sale
+    or rental for the purpose of calculating vacancy rates. This is set
+    equal to the value <monospace>rent</monospace> for
+    <monospace>OWNSHP == 2</monospace> and
+    <monospace>VACANCY == 1</monospace>, and <monospace>own</monospace>
+    for <monospace>OWNSHP == 1</monospace> and
+    <monospace>VACANCY == 2</monospace>; consistent with the
+    classifications determined above.</p>
+    <fig id="tbl-nahb-shortfall">
+      <caption><p>Table 2: Current shortfall of occupied housing units
+      by tenure type using NAHB Methodology.</p></caption>
+      <table-wrap>
+        <table>
+          <thead>
+            <tr>
+              <th id="tenure" scope="col">Tenure</th>
+              <th id="vac" scope="col">Vacant</th>
+              <th id="vac_moe" scope="col">Margin of Error</th>
+              <th id="occ" scope="col">Occupied</th>
+              <th id="occ_moe" scope="col">Margin of Error</th>
+              <th id="total" scope="col">Total</th>
+              <th id="vac_rate" scope="col">Vacancy Rate</th>
+              <th id="avg_vac_rate" scope="col">Average Vacancy
+              Rate</th>
+              <th id="diff_from_avg" scope="col">Difference from
+              Average</th>
+              <th id="shortfall" scope="col">Shortfall</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td headers="tenure">Rent</td>
+              <td headers="vac">41,901</td>
+              <td headers="vac_moe">5,192</td>
+              <td headers="occ">835,314</td>
+              <td headers="occ_moe">22,166</td>
+              <td headers="total">877,215</td>
+              <td headers="vac_rate">4.78%</td>
+              <td headers="avg_vac_rate">6.53%</td>
+              <td headers="diff_from_avg">1.76%</td>
+              <td headers="shortfall">15,414</td>
+            </tr>
+            <tr>
+              <td headers="tenure">Own</td>
+              <td headers="vac">12,816</td>
+              <td headers="vac_moe">2,753</td>
+              <td headers="occ">1,592,949</td>
+              <td headers="occ_moe">24,524</td>
+              <td headers="total">1,605,765</td>
+              <td headers="vac_rate">0.80%</td>
+              <td headers="avg_vac_rate">1.64%</td>
+              <td headers="diff_from_avg">0.84%</td>
+              <td headers="shortfall">13,549</td>
+            </tr>
+            <tr>
+              <td headers="tenure">Total</td>
+              <td headers="vac">54,717</td>
+              <td headers="vac_moe">7,945</td>
+              <td headers="occ">2,428,263</td>
+              <td headers="occ_moe">46,690</td>
+              <td headers="total">2,482,980</td>
+              <td headers="vac_rate">2.20%</td>
+              <td headers="avg_vac_rate">3.32%</td>
+              <td headers="diff_from_avg">1.12%</td>
+              <td headers="shortfall">27,699</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </fig>
+    <p><xref alt="Table 2" rid="tbl-nahb-shortfall">Table 2</xref>
+    contains the calculated shortfall for 2023 using the NAHB
+    methodology. Using this methodology shortfalls of 15.4k units for
+    rent and 13.5k units for ownership are determined, for a total
+    shortfall of 27.7k.</p>
+  </sec>
+</sec>
+</body>
+
+<back>
+<ref-list>
+  <title></title>
+  <ref id="ref-mccue2024">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>McCue</surname><given-names>Daniel;</given-names></name>
+        <name><surname>Huang</surname><given-names>Sophie</given-names></name>
+      </person-group>
+      <article-title>Estimating the National Housing Shortfall | Joint Center for Housing Studies</article-title>
+      <year iso-8601-date="2024-01-29">2024</year><month>01</month><day>29</day>
+      <uri>https://www.jchs.harvard.edu/blog/estimating-national-housing-shortfall</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-ipumsr">
+    <element-citation publication-type="book">
+      <person-group person-group-type="author">
+        <string-name>Greg Freedman Ellis</string-name>
+        <string-name>Derek Burk</string-name>
+        <string-name>Finn Roberts</string-name>
+      </person-group>
+      <source>Ipumsr: An r interface for downloading, reading, and handling IPUMS data</source>
+      <year iso-8601-date="2024">2024</year>
+      <uri>https://tech.popdata.org/ipumsr/</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-ruggles2024a">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Ruggles</surname><given-names>Steven</given-names></name>
+        <name><surname>Flood</surname><given-names>Sarah</given-names></name>
+        <name><surname>Sobek</surname><given-names>Matthew</given-names></name>
+        <name><surname>Backman</surname><given-names>Daniel</given-names></name>
+        <name><surname>Chen</surname><given-names>Annie</given-names></name>
+        <name><surname>Cooper</surname><given-names>Grace</given-names></name>
+        <name><surname>Richards</surname><given-names>Stephanie</given-names></name>
+        <name><surname>Rodgers</surname><given-names>Renae</given-names></name>
+        <name><surname>Schouweiler</surname><given-names>Megan</given-names></name>
+      </person-group>
+      <article-title>IPUMS USA: Version 15.0</article-title>
+      <publisher-name>Minneapolis, MN: IPUMS</publisher-name>
+      <year iso-8601-date="2024">2024</year>
+      <uri>https://usa.ipums.org</uri>
+      <pub-id pub-id-type="doi">10.18128/D010.V15.0</pub-id>
+    </element-citation>
+  </ref>
+</ref-list>
+<fn-group>
+  <fn id="fn1">
+    <label>1</label><p>Note to self - review these definitions to see if
+    we want to exclude any of these groupings.</p>
+  </fn>
+  <fn id="fn2">
+    <label>2</label><p>For this purpose we make the assumption that
+    <monospace>VACANCY == 1</monospace> (For rent or sale) is for Rent,
+    and <monospace>VACANCY ==2</monospace> (For sale only) is for sale
+    in order to the simplify the analysis.</p>
+  </fn>
+  <fn id="fn3">
+    <label>3</label><p>Note to self - verify that margin of error are
+    additive</p>
+  </fn>
+</fn-group>
+</back>
+
+<sub-article article-type="notebook" id="nb-3-nb-article">
+<front-stub>
+<title-group>
+<article-title>Estimating Colorado’s Housing Shortfall</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author">
+<name>
+<surname>Totten</surname>
+<given-names>Greg</given-names>
+</name>
+<string-name>Greg Totten</string-name>
+
+<xref ref-type="aff" rid="aff-1-nb-article">a</xref>
+</contrib>
+</contrib-group>
+<aff id="aff-1-nb-article">
+<institution-wrap>
+<institution>Colorado State Demography Office</institution>
+</institution-wrap>
+
+
+
+
+
+
+
+</aff>
+</front-stub>
+
+<body>
+<sec specific-use="notebook-content">
+<code language="r script">library(tidyverse)</code>
+<boxed-text>
+  <preformat>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</preformat>
+</boxed-text>
+<code language="r script">library(ipumsr)
+library(duckplyr)</code>
+<boxed-text>
+  <preformat>The duckplyr package is configured to fall back to dplyr when it encounters an
+incompatibility. Fallback events can be collected and uploaded for analysis to
+guide future development. By default, data will be collected but no data will
+be uploaded.
+ℹ Automatic fallback uploading is not controlled and therefore disabled, see
+  `?duckplyr::fallback()`.
+✔ Number of reports ready for upload: 43.
+→ Review with `duckplyr::fallback_review()`, upload with
+  `duckplyr::fallback_upload()`.
+ℹ Configure automatic uploading with `duckplyr::fallback_config()`.
+✔ Overwriting dplyr methods with duckplyr methods.
+ℹ Turn off with `duckplyr::methods_restore()`.</preformat>
+</boxed-text>
+<code language="r script">library(tidycensus)
+library(gt)
+library(srvyr)</code>
+<boxed-text>
+  <preformat>
+Attaching package: 'srvyr'
+
+The following object is masked from 'package:stats':
+
+    filter</preformat>
+</boxed-text>
+</sec>
+<sec id="defining-the-shortfall-nb-article">
+  <title>Defining The Shortfall</title>
+  <p>In order to estimate the total housing shortfall in Colorado, we
+  must first define the metrics by which we are going to assess the
+  number of housing units the state might be short.</p>
+  <p>How these metrics are defined can have a significant impact on the
+  resulting analysis. As a highly stylized example to demonstrate this
+  concept let’s begin by using two examples to bound our estimates:</p>
+  <list list-type="order">
+    <list-item>
+      <p>Every person currently residing in the state does so inside of
+      a permanent housing unit. In this scenario we would have a
+      relatively low estimate of the total number of necessary housing
+      units - as what would be required is enough units to house the
+      state’s unhoused population. In this case the estimate of number
+      housing units might just be the estimate of the number of people
+      in this population. However, this could be reduced by changing our
+      requirements of housing to include any shelter - such as tents as
+      vehicles, which would likely bring the estimated much lower.</p>
+    </list-item>
+    <list-item>
+      <p>Every current US resident who would like to live in Colorado
+      may do so, and they will be able to do so for free. Conversely, in
+      this scenario we might expect an estimate that is quite high, as
+      while some people still may opt not to reside in our beautiful
+      state (perhaps they do not particularly like sun), we could
+      reasonably expect many Americans, perhaps into the hundreds of
+      millions, might opt to spend no money to live in our beautiful
+      state.</p>
+    </list-item>
+  </list>
+  <p>In between these two estimates are a range of scenarios that might
+  be indicative of the number of housing units which are necessary -
+  based on the objectives we are trying to determine, and the underlying
+  assumptions about housing preferences which underlie them. In this
+  paper we will examine a variety of methods, based primarily on studies
+  by other researchers, that we can apply to Colorado to determine the
+  estimated housing shortfall in the state, under that method. In this
+  way we will provide not so much a point estimate of the total housing
+  shortfall, but a range of estimates which can be utilized by planners
+  and policy makers based on their discretion with respect to the
+  reasonableness and applicability of each method. In doing so we also
+  hope to plan a clear, concise, explanation of the method, what
+  objective it is attempting to solve for, and the meaning of the
+  estimate within that context.</p>
+</sec>
+<sec id="data-nb-article">
+  <title>Data</title>
+  <p>Data primarily comes from the most recent American Community Survey
+  (“ACS”) one year estimates for Colorado, and data from the Colorado
+  State Demography Office (“SDO”). One year ACS estimates are primarily
+  used as the population of the state is large enough to allow for the
+  use of such estimates. If applying similar methodologies at smaller
+  geography levels (such as county level), it may be necessary to
+  instead use 5 year estimates. Additionally, some methods of deriving
+  estimates, such as by analyzing Public Use Microdata Sample (“PUMS”)
+  data may not be possible for all methods. As such many methods
+  determined here may only be applicable at the state level.</p>
+</sec>
+<sec id="examples-nb-article">
+  <title>Examples</title>
+  <sec id="harvard-joint-center-for-housing-studies-blog-nb-article">
+    <title>Harvard Joint Center for Housing Studies Blog</title>
+    <p>One resource that compares four relatively recent national
+    studies attempting to determine housing shortfalls are a January
+    2024 blog entry from the Harvard Joint Center for Housing Studies
+    (“JHCS”)
+    (<xref alt="McCue and Huang 2024" rid="ref-mccue2024-nb-article" ref-type="bibr">McCue
+    and Huang 2024</xref>). The four studies each utilize different
+    methodologies and resulting estimates covering different years. The
+    four studies are:</p>
+    <list list-type="order">
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.freddiemac.com/research/insight/20210507-housing-supply">National
+        Association of Home Builders (NAHB) 2021</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.freddiemac.com/research/insight/20210507-housing-supply">Freddie
+        Mac 2020</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://www.nar.realtor/advocacy/housing-is-critical-infrastructure">National
+        Association of Realtors (NAR) 2021</ext-link></p>
+      </list-item>
+      <list-item>
+        <p><ext-link ext-link-type="uri" xlink:href="https://nlihc.org/gap">National
+        Low Income Housing Coalition (NLIHC)</ext-link></p>
+      </list-item>
+    </list>
+    <p>The following sections will provide estimates of the housing
+    shortage in Colorado based on each of these study methodologies.</p>
+  </sec>
+  <sec id="national-association-of-home-builders-nb-article">
+    <title>National Association of Home Builders</title>
+    <p>The NAHB study estimates the national housing shortage by
+    examining the difference in ACS vacancy rates in the current year
+    from their long run average. This resulted in an estimated shortage
+    of 1.5 million units.</p>
+    <p>The first step is to create a time series of vacancy rates for
+    the state with ACS data. This data is accessed from the IPUMS USA
+    database
+    (<xref alt="Ruggles et al. 2024" rid="ref-ruggles2024a-nb-article" ref-type="bibr">Ruggles
+    et al. 2024</xref>) using the <monospace>ipumsr</monospace> package
+    in R
+    (<xref alt="Greg Freedman Ellis, Derek Burk, and Finn Roberts 2024" rid="ref-ipumsr-nb-article" ref-type="bibr">Greg
+    Freedman Ellis, Derek Burk, and Finn Roberts 2024</xref>).</p>
+    <sec specific-use="notebook-content">
+    <code language="r script">acs_samples &lt;- get_sample_info(&quot;usa&quot;) |&gt;
+  filter(str_detect(name, pattern = &quot;20\\d+a<!-- (F2ED4C6E)[nb-article]:G:\Shared drives\SDO Econ\SB174\housing_needs\statewide_total_shortfall_estimates\index.qmd -->quot;)) |&gt; 
+  pull(name)
+
+ipums_dir &lt;- &quot;data/ipums_raw/&quot;
+ipums_ddi &lt;- &quot;usa_00080.xml&quot;
+file_loc &lt;- paste0(
+  ipums_dir,
+  ipums_ddi
+)
+  if (file.exists(file_loc)) {
+    acs_ddi &lt;- read_ipums_ddi(file_loc)
+    acs_00_23 &lt;- acs_ddi |&gt;
+      read_ipums_micro()
+  } else {
+acs_00_23 &lt;- define_extract_micro(
+      collection = &quot;usa&quot;,
+      description = &quot;ACS 1 year samples in Colorado of vacancy variables&quot;,
+      samples = acs_samples,
+      variables = list(
+        var_spec(&quot;STATEFIP&quot;, case_selections = &quot;08&quot;),
+        &quot;COUNTYFIP&quot;,
+        &quot;PUMA&quot;,
+        &quot;GQ&quot;,
+        &quot;OWNERSHP&quot;,
+        &quot;VACANCY&quot;,
+        &quot;REPWT&quot;
+      ),
+      data_structure = &quot;household_only&quot;
+    ) |&gt;
+      submit_extract() |&gt;
+      wait_for_extract() |&gt;
+      download_extract(download_dir = ipums_dir) |&gt;
+      read_ipums_micro()
+  }</code>
+    <boxed-text>
+      <preformat>Use of data from IPUMS USA is subject to conditions including that users should cite the data appropriately. Use command `ipums_conditions()` for more details.</preformat>
+    </boxed-text>
+    </sec>
+    <p>Vacancy rates are calculated based on both the
+    <monospace>OWNERSHP</monospace> and <monospace>VACANCY</monospace>
+    variables. Additionally the <monospace>GQ</monospace> variable is
+    used to filter out group quarters.</p>
+    <p>In order to calculate vacancy rates it is necessary to first
+    understand what each of the values for each variable represents</p>
+    <sec specific-use="notebook-content">
+    <code language="r script"># create acs_info from the DDI which includes variable information
+acs_info &lt;- ipums_var_info(acs_ddi)
+
+# generate table with variable information
+# table will include columns {VAR}_val, and {VAR}_lbl with the value and
+# label for each variable. This is setup so tab_spanner_delim can be used to
+# separate out columns in a GT table
+acs_var_tbl &lt;- acs_info |&gt;
+  # only include necessary variables
+  filter(var_name %in% c('OWNERSHP', 'VACANCY', &quot;GQ&quot;)) |&gt;
+  # remove other columns
+  select(var_name, val_labels) |&gt;
+  # unnest labels from nested columns
+  unnest(val_labels) |&gt;
+  # group by var_name for generating row numbers to unpivot without lists
+  group_by(var_name) |&gt;
+  # add row_numbers
+  mutate(row = row_number()) |&gt;
+  ungroup() |&gt; 
+  # pivot wider to generate table
+  pivot_wider(names_from = var_name,
+              values_from = c(val, lbl),
+              # specify order of variable then val/lbl column
+              names_glue = &quot;{var_name}_{.value}&quot;,
+              # use slowest so variables are grouped together
+              names_vary = &quot;slowest&quot;) |&gt;
+  # remove row index as no longer necessary
+  select(-row) |&gt; 
+  # move GQ to end
+  relocate(starts_with(&quot;GQ&quot;), .after = last_col())
+
+# create GT table with information
+acs_var_tbl_gt &lt;- acs_var_tbl |&gt;
+  gt() |&gt; 
+  # create spanners based on the column separators defined above
+ tab_spanner_delim(delim = &quot;_&quot;) |&gt;
+  # Replace NA values with empty strings
+  sub_missing(
+    missing_text = &quot;&quot;
+  )</code>
+    </sec>
+    <sec specific-use="notebook-content">
+    <code language="r script"># display table
+acs_var_tbl_gt</code>
+    <fig id="tbl-pums-vars-nb-article">
+      <caption><p>Table 1: Values and respective labels for each of the
+      <monospace>OWNERSHP</monospace>, <monospace>VACANCY</monospace>,
+      and <monospace>GQ</monospace> variables.</p></caption>
+      <table-wrap>
+        <table>
+          <colgroup>
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+            <col width="17%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th colspan="2" id="spanner-OWNERSHP_val-nb-article" scope="colgroup">OWNERSHP</th>
+              <th colspan="2" id="spanner-VACANCY_val-nb-article" scope="colgroup">VACANCY</th>
+              <th colspan="2" id="spanner-GQ_val-nb-article" scope="colgroup">GQ</th>
+            </tr>
+            <tr>
+              <th id="OWNERSHP_val-nb-article" scope="col">val</th>
+              <th id="OWNERSHP_lbl-nb-article" scope="col">lbl</th>
+              <th id="VACANCY_val-nb-article" scope="col">val</th>
+              <th id="VACANCY_lbl-nb-article" scope="col">lbl</th>
+              <th id="GQ_val-nb-article" scope="col">val</th>
+              <th id="GQ_lbl-nb-article" scope="col">lbl</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td headers="OWNERSHP_val">0</td>
+              <td headers="OWNERSHP_lbl">N/A</td>
+              <td headers="VACANCY_val">0</td>
+              <td headers="VACANCY_lbl">N/A</td>
+              <td headers="GQ_val">0</td>
+              <td headers="GQ_lbl">Vacant unit</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val">1</td>
+              <td headers="OWNERSHP_lbl">Owned or being bought
+              (loan)</td>
+              <td headers="VACANCY_val">1</td>
+              <td headers="VACANCY_lbl">For rent or sale</td>
+              <td headers="GQ_val">1</td>
+              <td headers="GQ_lbl">Households under 1970 definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val">2</td>
+              <td headers="OWNERSHP_lbl">Rented</td>
+              <td headers="VACANCY_val">2</td>
+              <td headers="VACANCY_lbl">For sale only</td>
+              <td headers="GQ_val">2</td>
+              <td headers="GQ_lbl">Additional households under 1990
+              definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">3</td>
+              <td headers="VACANCY_lbl">Rented or sold but not (yet)
+              occupied</td>
+              <td headers="GQ_val">3</td>
+              <td headers="GQ_lbl">Group quarters--Institutions</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">4</td>
+              <td headers="VACANCY_lbl">For seasonal, recreational or
+              other occasional use</td>
+              <td headers="GQ_val">4</td>
+              <td headers="GQ_lbl">Other group quarters</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">5</td>
+              <td headers="VACANCY_lbl">For occasional use</td>
+              <td headers="GQ_val">5</td>
+              <td headers="GQ_lbl">Additional households under 2000
+              definition</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">6</td>
+              <td headers="VACANCY_lbl">For seasonal use</td>
+              <td headers="GQ_val">6</td>
+              <td headers="GQ_lbl">Fragment</td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">7</td>
+              <td headers="VACANCY_lbl">For migrant farm workers</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">8</td>
+              <td headers="VACANCY_lbl">For seasonal use or
+              migratory</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+            <tr>
+              <td headers="OWNERSHP_val"><break/></td>
+              <td headers="OWNERSHP_lbl"><break/></td>
+              <td headers="VACANCY_val">9</td>
+              <td headers="VACANCY_lbl">Other vacant</td>
+              <td headers="GQ_val"><break/></td>
+              <td headers="GQ_lbl"><break/></td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </fig>
+    </sec>
+    <p><xref alt="Table 1" rid="tbl-pums-vars-nb-article">Table 1</xref> includes
+    the values and respective labels for each of the
+    <monospace>OWNERSHP</monospace>, <monospace>VACANCY</monospace>, and
+    <monospace>GQ</monospace> variables.</p>
+    <p>The N/A labels associated with <monospace>val=0</monospace> for
+    the <monospace>OWNERSHP</monospace> and
+    <monospace>VACANCY</monospace> variables is reflective of units
+    which are Vacant, or Occupied, respectively.</p>
+    <p>Given these values we then need to establish filtering parameters
+    for determining vacancy rates.</p>
+    <list list-type="order">
+      <list-item>
+        <p><monospace>GQ &lt;= 2 OR GQ ==5</monospace> filter out GQ
+        units to only included Households and Vacant Units (including
+        with the 1990 and 2000 Additional Unit
+        definitions)<xref ref-type="fn" rid="fn1-nb-article">1</xref>.</p>
+      </list-item>
+      <list-item>
+        <p><monospace>VACANCY &lt;=2</monospace> Remove
+        occasional/seasonal vacant units (4-6) consistent with NAHB
+        analysis. Remove migrant farm worker usage (7), and other vacant
+        (9), as these should be relatively independent of overall
+        vacancy rates. Reclassify <monospace>3</monospace> - Rented or
+        sold but not (yet) occupied to <monospace>0</monospace> as
+        occupied.</p>
+      </list-item>
+      <list-item>
+        <p>Leave Ownership as is.</p>
+      </list-item>
+    </list>
+    <p>In order to broadly analyze survey data, and additionally
+    calculate margin of error, the <monospace>srvyr</monospace> package
+    is used. Prior to analysis a survey object must be defined based on
+    the extracted ACS data. This survey object filters GQ units based on
+    condition 1 above, and removes vacant units based on condition 2
+    above. Additionally, it reclassifies
+    <monospace>VACANCY == 3</monospace> to <monospace>0</monospace> as
+    occupied. Finally, <monospace>N/A</monospace> values are relabeled
+    for each of the OWNERSHP, and VACANCY variables to reflict that
+    these reflect Vacant and Occupied units, respectively.</p>
+    <sec specific-use="notebook-content">
+    <code language="r script"># create survey design object
+acs_srvy &lt;- acs_00_23 |&gt; 
+    as_survey_design(
+      weight = HHWT,
+        repweights = matches(&quot;REPWT[0-9]+&quot;),
+        type = &quot;ACS&quot;, mse = TRUE) |&gt; 
+# remove GQ units and vacant units 4-6
+  filter(GQ %in% c(0,1,2,5) &amp; !(VACANCY %in% c(4:6, 7, 9)))  |&gt; 
+  # reclassify 3 to 0 and 4-6 to 3
+  mutate(
+    VACANCY = lbl_relabel(VACANCY, 0 ~.val == 3),
+    OWNERSHP = lbl_relabel(OWNERSHP, lbl(0, &quot;Vacant&quot;) ~ .val == 0)#,
+    #VACANCY = lbl_relabel(VACANCY, lbl(0, &quot;Occupied&quot;) ~ .val == 0)
+    )</code>
+    </sec>
+    <p>Then total up on an annual basis the total occupied units each
+    for sale and for rent, as well as vacant units by for sale or for
+    rent<xref ref-type="fn" rid="fn2-nb-article">2</xref>[^margin of error are
+    calculated as 1.645 * standard error consistent with 90% CI]. We
+    additionally calculate total occupied and total vacant as the sum of
+    each of these. Vacancy rates are then calculated as
+    <inline-formula><tex-math><![CDATA[\sum VACANT_{ot}\over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}]]></tex-math></inline-formula>
+    for each occupancy status <inline-formula><alternatives>
+    <tex-math><![CDATA[o]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>o</mml:mi></mml:math></alternatives></inline-formula>
+    and year <inline-formula><alternatives>
+    <tex-math><![CDATA[t]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>t</mml:mi></mml:math></alternatives></inline-formula>.
+    Finally we calculate the sum total of occupied and vacant units for
+    each year<xref ref-type="fn" rid="fn3-nb-article">3</xref>.</p>
+    <p>Once the vacancy rates are calculated, we then calculate the
+    average vacancy rate for each year. To get an annual shortfall we
+    then take the difference between the average vacancy rate and the
+    current vacancy rate. Applying this difference to the total number
+    of units for each year gives us the annual shortfall.</p>
+    <p>In combining vacancy rates a <monospace>tenure</monospace>
+    variable is created to determine if a unit is determined to be sale
+    or rental for the purpose of calculating vacancy rates. This is set
+    equal to the value <monospace>rent</monospace> for
+    <monospace>OWNSHP == 2</monospace> and
+    <monospace>VACANCY == 1</monospace>, and <monospace>own</monospace>
+    for <monospace>OWNSHP == 1</monospace> and
+    <monospace>VACANCY == 2</monospace>; consistent with the
+    classifications determined above.</p>
+    <sec specific-use="notebook-content">
+    <code language="r script"># calculate vacancy
+acs_vacancy &lt;- acs_srvy |&gt; 
+  group_by(VACANCY, YEAR) |&gt; 
+  survey_count(VACANCY, name = &quot;vac&quot;) |&gt; 
+  mutate(
+    vac_moe = vac_se *1.645,
+    tenure = case_when(
+      VACANCY == 1 ~ &quot;rent&quot;,
+      VACANCY == 2 ~ &quot;own&quot;
+    )
+  ) |&gt; 
+    filter(!is.na(tenure)) |&gt;
+  ungroup()
+
+# calculate occupied
+acs_occupancy &lt;- acs_srvy |&gt; 
+  group_by(OWNERSHP, YEAR) |&gt; 
+  survey_count(OWNERSHP, name = &quot;occ&quot;) |&gt; 
+  mutate(
+    occ_moe = occ_se *1.645,
+    tenure = case_when(
+      OWNERSHP == 1 ~ &quot;own&quot;,
+      OWNERSHP == 2 ~ &quot;rent&quot;
+    )
+  )|&gt; 
+    filter(!is.na(tenure)) |&gt; 
+  ungroup()
+
+# calculate total occupied and total vacant
+acs_combined_ov &lt;- acs_vacancy |&gt; 
+  select(YEAR, tenure, vac, vac_moe) |&gt;
+  left_join(acs_occupancy |&gt; 
+              select(YEAR, tenure, occ, occ_moe), 
+            by = c(&quot;YEAR&quot;, &quot;tenure&quot;)) %&gt;% # old style pipe needs to be used to pipe . into bind_rows
+  bind_rows(
+    summarize(
+      .,
+    tenure = &quot;total&quot;, 
+    across(c(vac:occ_moe), sum),
+    .by = YEAR)
+    ) |&gt; 
+  mutate(
+    total = vac + occ,
+    vac_rate = vac/total
+  ) |&gt; 
+  group_by(tenure) |&gt; 
+  mutate(avg_vac_rate = mean(vac_rate)) |&gt; 
+  ungroup() |&gt;
+  mutate(
+    diff_from_avg = avg_vac_rate - vac_rate,
+    shortfall = diff_from_avg * total)
+
+current_shortfall &lt;- acs_combined_ov |&gt; 
+  filter(YEAR == 2023) |&gt; 
+  select(-YEAR) |&gt; 
+  mutate(tenure = str_to_title(tenure)) |&gt; 
+  gt() |&gt; 
+  fmt_number(c(vac:total, shortfall), decimals = 0) |&gt; 
+  fmt_percent(c(vac_rate:diff_from_avg)) |&gt; 
+  cols_label(
+    tenure = &quot;Tenure&quot;, 
+    vac = &quot;Vacant&quot;, 
+    vac_moe = &quot;Margin of Error&quot;, 
+    occ = &quot;Occupied&quot;, 
+    occ_moe = &quot;Margin of Error&quot;, 
+    total = &quot;Total&quot;, 
+    vac_rate = &quot;Vacancy Rate&quot;, 
+    avg_vac_rate = &quot;Average Vacancy Rate&quot;, 
+    diff_from_avg = &quot;Difference from Average&quot;, 
+    shortfall = &quot;Shortfall&quot;
+  ) |&gt; 
+    cols_align(&quot;center&quot;)</code>
+    </sec>
+    <sec specific-use="notebook-content">
+    <code language="r script">current_shortfall</code>
+    <fig id="tbl-nahb-shortfall-nb-article">
+      <caption><p>Table 2: Current shortfall of occupied housing units
+      by tenure type using NAHB Methodology.</p></caption>
+      <table-wrap>
+        <table>
+          <thead>
+            <tr>
+              <th id="tenure-nb-article" scope="col">Tenure</th>
+              <th id="vac-nb-article" scope="col">Vacant</th>
+              <th id="vac_moe-nb-article" scope="col">Margin of Error</th>
+              <th id="occ-nb-article" scope="col">Occupied</th>
+              <th id="occ_moe-nb-article" scope="col">Margin of Error</th>
+              <th id="total-nb-article" scope="col">Total</th>
+              <th id="vac_rate-nb-article" scope="col">Vacancy Rate</th>
+              <th id="avg_vac_rate-nb-article" scope="col">Average Vacancy
+              Rate</th>
+              <th id="diff_from_avg-nb-article" scope="col">Difference from
+              Average</th>
+              <th id="shortfall-nb-article" scope="col">Shortfall</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td headers="tenure">Rent</td>
+              <td headers="vac">41,901</td>
+              <td headers="vac_moe">5,192</td>
+              <td headers="occ">835,314</td>
+              <td headers="occ_moe">22,166</td>
+              <td headers="total">877,215</td>
+              <td headers="vac_rate">4.78%</td>
+              <td headers="avg_vac_rate">6.53%</td>
+              <td headers="diff_from_avg">1.76%</td>
+              <td headers="shortfall">15,414</td>
+            </tr>
+            <tr>
+              <td headers="tenure">Own</td>
+              <td headers="vac">12,816</td>
+              <td headers="vac_moe">2,753</td>
+              <td headers="occ">1,592,949</td>
+              <td headers="occ_moe">24,524</td>
+              <td headers="total">1,605,765</td>
+              <td headers="vac_rate">0.80%</td>
+              <td headers="avg_vac_rate">1.64%</td>
+              <td headers="diff_from_avg">0.84%</td>
+              <td headers="shortfall">13,549</td>
+            </tr>
+            <tr>
+              <td headers="tenure">Total</td>
+              <td headers="vac">54,717</td>
+              <td headers="vac_moe">7,945</td>
+              <td headers="occ">2,428,263</td>
+              <td headers="occ_moe">46,690</td>
+              <td headers="total">2,482,980</td>
+              <td headers="vac_rate">2.20%</td>
+              <td headers="avg_vac_rate">3.32%</td>
+              <td headers="diff_from_avg">1.12%</td>
+              <td headers="shortfall">27,699</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </fig>
+    </sec>
+    <p><xref alt="Table 2" rid="tbl-nahb-shortfall-nb-article">Table 2</xref>
+    contains the calculated shortfall for 2023 using the NAHB
+    methodology. Using this methodology shortfalls of 15.4k units for
+    rent and 13.5k units for ownership are determined, for a total
+    shortfall of 27.7k.</p>
+  </sec>
+</sec>
+</body>
+
+
+
+<back>
+<ref-list>
+  <title></title>
+  <ref id="ref-mccue2024-nb-article">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>McCue</surname><given-names>Daniel;</given-names></name>
+        <name><surname>Huang</surname><given-names>Sophie</given-names></name>
+      </person-group>
+      <article-title>Estimating the National Housing Shortfall | Joint Center for Housing Studies</article-title>
+      <year iso-8601-date="2024-01-29">2024</year><month>01</month><day>29</day>
+      <uri>https://www.jchs.harvard.edu/blog/estimating-national-housing-shortfall</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-ipumsr-nb-article">
+    <element-citation publication-type="book">
+      <person-group person-group-type="author">
+        <string-name>Greg Freedman Ellis</string-name>
+        <string-name>Derek Burk</string-name>
+        <string-name>Finn Roberts</string-name>
+      </person-group>
+      <source>Ipumsr: An r interface for downloading, reading, and handling IPUMS data</source>
+      <year iso-8601-date="2024">2024</year>
+      <uri>https://tech.popdata.org/ipumsr/</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-ruggles2024a-nb-article">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Ruggles</surname><given-names>Steven</given-names></name>
+        <name><surname>Flood</surname><given-names>Sarah</given-names></name>
+        <name><surname>Sobek</surname><given-names>Matthew</given-names></name>
+        <name><surname>Backman</surname><given-names>Daniel</given-names></name>
+        <name><surname>Chen</surname><given-names>Annie</given-names></name>
+        <name><surname>Cooper</surname><given-names>Grace</given-names></name>
+        <name><surname>Richards</surname><given-names>Stephanie</given-names></name>
+        <name><surname>Rodgers</surname><given-names>Renae</given-names></name>
+        <name><surname>Schouweiler</surname><given-names>Megan</given-names></name>
+      </person-group>
+      <article-title>IPUMS USA: Version 15.0</article-title>
+      <publisher-name>Minneapolis, MN: IPUMS</publisher-name>
+      <year iso-8601-date="2024">2024</year>
+      <uri>https://usa.ipums.org</uri>
+      <pub-id pub-id-type="doi">10.18128/D010.V15.0</pub-id>
+    </element-citation>
+  </ref>
+</ref-list>
+<fn-group>
+  <fn id="fn1-nb-article">
+    <label>1</label><p>Note to self - review these definitions to see if
+    we want to exclude any of these groupings.</p>
+  </fn>
+  <fn id="fn2-nb-article">
+    <label>2</label><p>For this purpose we make the assumption that
+    <monospace>VACANCY == 1</monospace> (For rent or sale) is for Rent,
+    and <monospace>VACANCY ==2</monospace> (For sale only) is for sale
+    in order to the simplify the analysis.</p>
+  </fn>
+  <fn id="fn3-nb-article">
+    <label>3</label><p>Note to self - verify that margin of error are
+    additive</p>
+  </fn>
+</fn-group>
+</back>
+
+
+</sub-article>
+
+</article>
