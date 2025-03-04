@@ -4,10 +4,17 @@ authors:
   - name: Greg Totten
     affiliation: Colorado State Demography Office
 bibliography: references.bib
+
+html:
+  include-in-header:
+    - text: |
+        <meta name="robots" content="noindex">
+
 ---
 
 ```{r}
 #| label: setup
+#| cache: false
 
 library(tidyverse)
 library(ipumsr)
@@ -17,6 +24,8 @@ library(gt)
 library(srvyr)
 library(scales)
 ```
+
+The current file is a draft working version and should be recognized as such. All discussion and analysis should be considered preliminary and subject to change.
 
 ## Defining The Shortfall
 

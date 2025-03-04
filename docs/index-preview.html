@@ -184,7 +184,7 @@
   window.document.addEventListener("DOMContentLoaded", function (_event) {
     document.body.classList.add('hypothesis-enabled');
   });
-</script>   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script> 
+</script>  <meta name="robots" content="noindex">   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script> 
       <meta name="citation_title" content="Estimating Colorado&amp;amp;#039;s Housing Shortfall">
 <meta name="citation_author" content="Greg Totten">
 <meta name="citation_language" content="en">
@@ -292,7 +292,7 @@ guide future development. By default, data will be collected but no data will
 be uploaded.
 ℹ Automatic fallback uploading is not controlled and therefore disabled, see
   `?duckplyr::fallback()`.
-✔ Number of reports ready for upload: 5.
+✔ Number of reports ready for upload: 60.
 → Review with `duckplyr::fallback_review()`, upload with
   `duckplyr::fallback_upload()`.
 ℹ Configure automatic uploading with `duckplyr::fallback_config()`.
@@ -324,6 +324,7 @@ The following object is masked from 'package:readr':
     col_factor</code></pre>
 </div>
 </div></div>
+<p>The current file is a draft working version and should be recognized as such. All discussion and analysis should be considered preliminary and subject to change.</p>
 <section id="defining-the-shortfall" class="level2">
 <h2 class="anchored" data-anchor-id="defining-the-shortfall">Defining The Shortfall</h2>
 <p>In order to estimate the total housing shortfall in Colorado, we must first define the metrics by which we are going to assess the number of housing units the state might be short.</p>
@@ -452,23 +453,23 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
 </figcaption>
 <div aria-describedby="tbl-pums-vars-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="ozxoqjasxe" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#ozxoqjasxe table {
+<div id="iyoqvotses" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#iyoqvotses table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#ozxoqjasxe thead, #ozxoqjasxe tbody, #ozxoqjasxe tfoot, #ozxoqjasxe tr, #ozxoqjasxe td, #ozxoqjasxe th {
+#iyoqvotses thead, #iyoqvotses tbody, #iyoqvotses tfoot, #iyoqvotses tr, #iyoqvotses td, #iyoqvotses th {
   border-style: none;
 }
 
-#ozxoqjasxe p {
+#iyoqvotses p {
   margin: 0;
   padding: 0;
 }
 
-#ozxoqjasxe .gt_table {
+#iyoqvotses .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -494,12 +495,12 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-left-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_caption {
+#iyoqvotses .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#ozxoqjasxe .gt_title {
+#iyoqvotses .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -511,7 +512,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-bottom-width: 0;
 }
 
-#ozxoqjasxe .gt_subtitle {
+#iyoqvotses .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -523,7 +524,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-top-width: 0;
 }
 
-#ozxoqjasxe .gt_heading {
+#iyoqvotses .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -535,13 +536,13 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-right-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_bottom_border {
+#iyoqvotses .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_col_headings {
+#iyoqvotses .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -556,7 +557,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-right-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_col_heading {
+#iyoqvotses .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -576,7 +577,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   overflow-x: hidden;
 }
 
-#ozxoqjasxe .gt_column_spanner_outer {
+#iyoqvotses .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -588,15 +589,15 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 4px;
 }
 
-#ozxoqjasxe .gt_column_spanner_outer:first-child {
+#iyoqvotses .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#tdezifjhmm .gt_column_spanner_outer:last-child {
+#iyoqvotses .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#ozxoqjasxe .gt_column_spanner {
+#iyoqvotses .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -608,11 +609,11 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   width: 100%;
 }
 
-#ozxoqjasxe .gt_spanner_row {
+#iyoqvotses .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#ozxoqjasxe .gt_group_heading {
+#iyoqvotses .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -638,7 +639,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   text-align: left;
 }
 
-#ozxoqjasxe .gt_empty_group_heading {
+#iyoqvotses .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -653,15 +654,15 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   vertical-align: middle;
 }
 
-#ozxoqjasxe .gt_from_md > :first-child {
+#iyoqvotses .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#tdezifjhmm .gt_from_md > :last-child {
+#iyoqvotses .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#ozxoqjasxe .gt_row {
+#iyoqvotses .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -680,7 +681,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   overflow-x: hidden;
 }
 
-#ozxoqjasxe .gt_stub {
+#iyoqvotses .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -693,7 +694,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 5px;
 }
 
-#ozxoqjasxe .gt_stub_row_group {
+#iyoqvotses .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -707,15 +708,15 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   vertical-align: top;
 }
 
-#ozxoqjasxe .gt_row_group_first td {
+#iyoqvotses .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#tdezifjhmm .gt_row_group_first th {
+#iyoqvotses .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#ozxoqjasxe .gt_summary_row {
+#iyoqvotses .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -725,16 +726,16 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 5px;
 }
 
-#ozxoqjasxe .gt_first_summary_row {
+#iyoqvotses .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_first_summary_row.thick {
+#iyoqvotses .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#ozxoqjasxe .gt_last_summary_row {
+#iyoqvotses .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -744,7 +745,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-bottom-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_grand_summary_row {
+#iyoqvotses .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -754,7 +755,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 5px;
 }
 
-#ozxoqjasxe .gt_first_grand_summary_row {
+#iyoqvotses .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -764,7 +765,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-top-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_last_grand_summary_row_top {
+#iyoqvotses .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -774,11 +775,11 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-bottom-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_striped {
+#iyoqvotses .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#ozxoqjasxe .gt_table_body {
+#iyoqvotses .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -787,7 +788,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-bottom-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_footnotes {
+#iyoqvotses .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -801,7 +802,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-right-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_footnote {
+#iyoqvotses .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -810,7 +811,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 5px;
 }
 
-#ozxoqjasxe .gt_sourcenotes {
+#iyoqvotses .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -824,7 +825,7 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   border-right-color: #D3D3D3;
 }
 
-#ozxoqjasxe .gt_sourcenote {
+#iyoqvotses .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -832,72 +833,72 @@ Table&nbsp;1: Values and respective labels for each of the <code>OWNERSHP</code>
   padding-right: 5px;
 }
 
-#ozxoqjasxe .gt_left {
+#iyoqvotses .gt_left {
   text-align: left;
 }
 
-#tdezifjhmm .gt_center {
+#iyoqvotses .gt_center {
   text-align: center;
 }
 
-#ozxoqjasxe .gt_right {
+#iyoqvotses .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#ozxoqjasxe .gt_font_normal {
+#iyoqvotses .gt_font_normal {
   font-weight: normal;
 }
 
-#tdezifjhmm .gt_font_bold {
+#iyoqvotses .gt_font_bold {
   font-weight: bold;
 }
 
-#tdezifjhmm .gt_font_italic {
+#iyoqvotses .gt_font_italic {
   font-style: italic;
 }
 
-#tdezifjhmm .gt_super {
+#iyoqvotses .gt_super {
   font-size: 65%;
 }
 
-#ozxoqjasxe .gt_footnote_marks {
+#iyoqvotses .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#ozxoqjasxe .gt_asterisk {
+#iyoqvotses .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#ozxoqjasxe .gt_indent_1 {
+#iyoqvotses .gt_indent_1 {
   text-indent: 5px;
 }
 
-#tdezifjhmm .gt_indent_2 {
+#iyoqvotses .gt_indent_2 {
   text-indent: 10px;
 }
 
-#tdezifjhmm .gt_indent_3 {
+#iyoqvotses .gt_indent_3 {
   text-indent: 15px;
 }
 
-#tdezifjhmm .gt_indent_4 {
+#iyoqvotses .gt_indent_4 {
   text-indent: 20px;
 }
 
-#tdezifjhmm .gt_indent_5 {
+#iyoqvotses .gt_indent_5 {
   text-indent: 25px;
 }
 
-#ozxoqjasxe .katex-display {
+#iyoqvotses .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#ozxoqjasxe div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#iyoqvotses div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1174,23 +1175,23 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
 </figcaption>
 <div aria-describedby="tbl-nahb-shortfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="jqghhrwlas" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#jqghhrwlas table {
+<div id="ibohwtjxmm" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ibohwtjxmm table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#jqghhrwlas thead, #jqghhrwlas tbody, #jqghhrwlas tfoot, #jqghhrwlas tr, #jqghhrwlas td, #jqghhrwlas th {
+#ibohwtjxmm thead, #ibohwtjxmm tbody, #ibohwtjxmm tfoot, #ibohwtjxmm tr, #ibohwtjxmm td, #ibohwtjxmm th {
   border-style: none;
 }
 
-#jqghhrwlas p {
+#ibohwtjxmm p {
   margin: 0;
   padding: 0;
 }
 
-#jqghhrwlas .gt_table {
+#ibohwtjxmm .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1216,12 +1217,12 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-left-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_caption {
+#ibohwtjxmm .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jqghhrwlas .gt_title {
+#ibohwtjxmm .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1233,7 +1234,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-bottom-width: 0;
 }
 
-#jqghhrwlas .gt_subtitle {
+#ibohwtjxmm .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1245,7 +1246,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-top-width: 0;
 }
 
-#jqghhrwlas .gt_heading {
+#ibohwtjxmm .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1257,13 +1258,13 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-right-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_bottom_border {
+#ibohwtjxmm .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_col_headings {
+#ibohwtjxmm .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1278,7 +1279,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-right-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_col_heading {
+#ibohwtjxmm .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1298,7 +1299,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   overflow-x: hidden;
 }
 
-#jqghhrwlas .gt_column_spanner_outer {
+#ibohwtjxmm .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1310,15 +1311,15 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 4px;
 }
 
-#jqghhrwlas .gt_column_spanner_outer:first-child {
+#ibohwtjxmm .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#drickaitos .gt_column_spanner_outer:last-child {
+#ibohwtjxmm .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jqghhrwlas .gt_column_spanner {
+#ibohwtjxmm .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1330,11 +1331,11 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   width: 100%;
 }
 
-#jqghhrwlas .gt_spanner_row {
+#ibohwtjxmm .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#jqghhrwlas .gt_group_heading {
+#ibohwtjxmm .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1360,7 +1361,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   text-align: left;
 }
 
-#jqghhrwlas .gt_empty_group_heading {
+#ibohwtjxmm .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1375,15 +1376,15 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   vertical-align: middle;
 }
 
-#jqghhrwlas .gt_from_md > :first-child {
+#ibohwtjxmm .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#drickaitos .gt_from_md > :last-child {
+#ibohwtjxmm .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jqghhrwlas .gt_row {
+#ibohwtjxmm .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1402,7 +1403,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   overflow-x: hidden;
 }
 
-#jqghhrwlas .gt_stub {
+#ibohwtjxmm .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1415,7 +1416,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 5px;
 }
 
-#jqghhrwlas .gt_stub_row_group {
+#ibohwtjxmm .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1429,15 +1430,15 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   vertical-align: top;
 }
 
-#jqghhrwlas .gt_row_group_first td {
+#ibohwtjxmm .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#drickaitos .gt_row_group_first th {
+#ibohwtjxmm .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#jqghhrwlas .gt_summary_row {
+#ibohwtjxmm .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1447,16 +1448,16 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 5px;
 }
 
-#jqghhrwlas .gt_first_summary_row {
+#ibohwtjxmm .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_first_summary_row.thick {
+#ibohwtjxmm .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jqghhrwlas .gt_last_summary_row {
+#ibohwtjxmm .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1466,7 +1467,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-bottom-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_grand_summary_row {
+#ibohwtjxmm .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1476,7 +1477,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 5px;
 }
 
-#jqghhrwlas .gt_first_grand_summary_row {
+#ibohwtjxmm .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1486,7 +1487,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-top-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_last_grand_summary_row_top {
+#ibohwtjxmm .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1496,11 +1497,11 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-bottom-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_striped {
+#ibohwtjxmm .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jqghhrwlas .gt_table_body {
+#ibohwtjxmm .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1509,7 +1510,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-bottom-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_footnotes {
+#ibohwtjxmm .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1523,7 +1524,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-right-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_footnote {
+#ibohwtjxmm .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1532,7 +1533,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 5px;
 }
 
-#jqghhrwlas .gt_sourcenotes {
+#ibohwtjxmm .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1546,7 +1547,7 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   border-right-color: #D3D3D3;
 }
 
-#jqghhrwlas .gt_sourcenote {
+#ibohwtjxmm .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1554,72 +1555,72 @@ Table&nbsp;2: Current shortfall of occupied housing units by tenure type using N
   padding-right: 5px;
 }
 
-#jqghhrwlas .gt_left {
+#ibohwtjxmm .gt_left {
   text-align: left;
 }
 
-#drickaitos .gt_center {
+#ibohwtjxmm .gt_center {
   text-align: center;
 }
 
-#jqghhrwlas .gt_right {
+#ibohwtjxmm .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jqghhrwlas .gt_font_normal {
+#ibohwtjxmm .gt_font_normal {
   font-weight: normal;
 }
 
-#drickaitos .gt_font_bold {
+#ibohwtjxmm .gt_font_bold {
   font-weight: bold;
 }
 
-#drickaitos .gt_font_italic {
+#ibohwtjxmm .gt_font_italic {
   font-style: italic;
 }
 
-#drickaitos .gt_super {
+#ibohwtjxmm .gt_super {
   font-size: 65%;
 }
 
-#jqghhrwlas .gt_footnote_marks {
+#ibohwtjxmm .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#jqghhrwlas .gt_asterisk {
+#ibohwtjxmm .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jqghhrwlas .gt_indent_1 {
+#ibohwtjxmm .gt_indent_1 {
   text-indent: 5px;
 }
 
-#drickaitos .gt_indent_2 {
+#ibohwtjxmm .gt_indent_2 {
   text-indent: 10px;
 }
 
-#drickaitos .gt_indent_3 {
+#ibohwtjxmm .gt_indent_3 {
   text-indent: 15px;
 }
 
-#drickaitos .gt_indent_4 {
+#ibohwtjxmm .gt_indent_4 {
   text-indent: 20px;
 }
 
-#drickaitos .gt_indent_5 {
+#ibohwtjxmm .gt_indent_5 {
   text-indent: 25px;
 }
 
-#jqghhrwlas .katex-display {
+#ibohwtjxmm .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#jqghhrwlas div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#ibohwtjxmm div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1798,23 +1799,23 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
 </figcaption>
 <div aria-describedby="tbl-headship-rates-ye-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="mewaodelpy" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#mewaodelpy table {
+<div id="btiulkdxpt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#btiulkdxpt table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#mewaodelpy thead, #mewaodelpy tbody, #mewaodelpy tfoot, #mewaodelpy tr, #mewaodelpy td, #mewaodelpy th {
+#btiulkdxpt thead, #btiulkdxpt tbody, #btiulkdxpt tfoot, #btiulkdxpt tr, #btiulkdxpt td, #btiulkdxpt th {
   border-style: none;
 }
 
-#mewaodelpy p {
+#btiulkdxpt p {
   margin: 0;
   padding: 0;
 }
 
-#mewaodelpy .gt_table {
+#btiulkdxpt .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1840,12 +1841,12 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-left-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_caption {
+#btiulkdxpt .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#mewaodelpy .gt_title {
+#btiulkdxpt .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1857,7 +1858,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-bottom-width: 0;
 }
 
-#mewaodelpy .gt_subtitle {
+#btiulkdxpt .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1869,7 +1870,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-top-width: 0;
 }
 
-#mewaodelpy .gt_heading {
+#btiulkdxpt .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1881,13 +1882,13 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-right-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_bottom_border {
+#btiulkdxpt .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_col_headings {
+#btiulkdxpt .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1902,7 +1903,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-right-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_col_heading {
+#btiulkdxpt .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1922,7 +1923,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   overflow-x: hidden;
 }
 
-#mewaodelpy .gt_column_spanner_outer {
+#btiulkdxpt .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1934,15 +1935,15 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 4px;
 }
 
-#mewaodelpy .gt_column_spanner_outer:first-child {
+#btiulkdxpt .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#afktcyfjxc .gt_column_spanner_outer:last-child {
+#btiulkdxpt .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#mewaodelpy .gt_column_spanner {
+#btiulkdxpt .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1954,11 +1955,11 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   width: 100%;
 }
 
-#mewaodelpy .gt_spanner_row {
+#btiulkdxpt .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#mewaodelpy .gt_group_heading {
+#btiulkdxpt .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1984,7 +1985,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   text-align: left;
 }
 
-#mewaodelpy .gt_empty_group_heading {
+#btiulkdxpt .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1999,15 +2000,15 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   vertical-align: middle;
 }
 
-#mewaodelpy .gt_from_md > :first-child {
+#btiulkdxpt .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#afktcyfjxc .gt_from_md > :last-child {
+#btiulkdxpt .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#mewaodelpy .gt_row {
+#btiulkdxpt .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2026,7 +2027,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   overflow-x: hidden;
 }
 
-#mewaodelpy .gt_stub {
+#btiulkdxpt .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2039,7 +2040,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 5px;
 }
 
-#mewaodelpy .gt_stub_row_group {
+#btiulkdxpt .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2053,15 +2054,15 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   vertical-align: top;
 }
 
-#mewaodelpy .gt_row_group_first td {
+#btiulkdxpt .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#afktcyfjxc .gt_row_group_first th {
+#btiulkdxpt .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#mewaodelpy .gt_summary_row {
+#btiulkdxpt .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2071,16 +2072,16 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 5px;
 }
 
-#mewaodelpy .gt_first_summary_row {
+#btiulkdxpt .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_first_summary_row.thick {
+#btiulkdxpt .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#mewaodelpy .gt_last_summary_row {
+#btiulkdxpt .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2090,7 +2091,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-bottom-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_grand_summary_row {
+#btiulkdxpt .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2100,7 +2101,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 5px;
 }
 
-#mewaodelpy .gt_first_grand_summary_row {
+#btiulkdxpt .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2110,7 +2111,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-top-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_last_grand_summary_row_top {
+#btiulkdxpt .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2120,11 +2121,11 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-bottom-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_striped {
+#btiulkdxpt .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#mewaodelpy .gt_table_body {
+#btiulkdxpt .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2133,7 +2134,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-bottom-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_footnotes {
+#btiulkdxpt .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2147,7 +2148,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-right-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_footnote {
+#btiulkdxpt .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -2156,7 +2157,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 5px;
 }
 
-#mewaodelpy .gt_sourcenotes {
+#btiulkdxpt .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2170,7 +2171,7 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   border-right-color: #D3D3D3;
 }
 
-#mewaodelpy .gt_sourcenote {
+#btiulkdxpt .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2178,72 +2179,72 @@ Table&nbsp;3: Headship Rates by Final Year of Averaging
   padding-right: 5px;
 }
 
-#mewaodelpy .gt_left {
+#btiulkdxpt .gt_left {
   text-align: left;
 }
 
-#afktcyfjxc .gt_center {
+#btiulkdxpt .gt_center {
   text-align: center;
 }
 
-#mewaodelpy .gt_right {
+#btiulkdxpt .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#mewaodelpy .gt_font_normal {
+#btiulkdxpt .gt_font_normal {
   font-weight: normal;
 }
 
-#afktcyfjxc .gt_font_bold {
+#btiulkdxpt .gt_font_bold {
   font-weight: bold;
 }
 
-#afktcyfjxc .gt_font_italic {
+#btiulkdxpt .gt_font_italic {
   font-style: italic;
 }
 
-#afktcyfjxc .gt_super {
+#btiulkdxpt .gt_super {
   font-size: 65%;
 }
 
-#mewaodelpy .gt_footnote_marks {
+#btiulkdxpt .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#mewaodelpy .gt_asterisk {
+#btiulkdxpt .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#mewaodelpy .gt_indent_1 {
+#btiulkdxpt .gt_indent_1 {
   text-indent: 5px;
 }
 
-#afktcyfjxc .gt_indent_2 {
+#btiulkdxpt .gt_indent_2 {
   text-indent: 10px;
 }
 
-#afktcyfjxc .gt_indent_3 {
+#btiulkdxpt .gt_indent_3 {
   text-indent: 15px;
 }
 
-#afktcyfjxc .gt_indent_4 {
+#btiulkdxpt .gt_indent_4 {
   text-indent: 20px;
 }
 
-#afktcyfjxc .gt_indent_5 {
+#btiulkdxpt .gt_indent_5 {
   text-indent: 25px;
 }
 
-#mewaodelpy .katex-display {
+#btiulkdxpt .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#mewaodelpy div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#btiulkdxpt div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -2354,6 +2355,17 @@ Figure&nbsp;1: Headship Rates Over Time
 </div>
 </div>
 </div></div>
+</section>
+<section id="national-association-of-realtors" class="level3">
+<h3 class="anchored" data-anchor-id="national-association-of-realtors">National Association of Realtors</h3>
+<p>This uses the decline in building rates during the 2000s relative to the long term averages between 1968 and 2000 to determine the shortfall in housing from the supply side. This method was not recreated due to the inherent underlying assumptions. In particular, growth rates are not necessarily linear over time, and this is particularly the case with rapidly growing states. Colorado in particular was undergoing rapid urbanization and it is not necessarily safe to assume that growth of this style would continue.</p>
+</section>
+<section id="national-low-income-housing-coalitition-nlihc" class="level3">
+<h3 class="anchored" data-anchor-id="national-low-income-housing-coalitition-nlihc">National Low Income Housing Coalitition (NLIHC)</h3>
+<p>This calculates the housing gap based on the difference between households by AMI (extremely low-income, very low-income, low-income, middle-income, or above median income), based on the applicable HUD AMI. Housing Units were separately categorized into income necessary to rent them, based on spending more than 30% of their income on housing costs (regardless of the actual income of the household occupying that housing unit). Finally they examined the extent to which households in each AMI group resided in a unit which was affordable to that household. <span class="citation" data-cites="thegap2024">(<a href="#ref-thegap2024" role="doc-biblioref"><span>“The Gap - a Shortage of Affrodable Homes”</span> 2024</a>)</span></p>
+<p>While this methodology is similar to the method SDO is currently working as part of its Housing Needs Assessments there is no need to recreate the table directly, as NLIHC provides state level results for all states, including <a href="https://nlihc.org/gap/state/co">Colorado</a>, based on 2022 ACS data.</p>
+<p>Based on their methodology NLIHC finds Colorado to be short 119,782 housing units at the Extremely Low Income (0 to 30% of Area Median Income), and 165,053 units for households at or below 50% AMI (including those who were classified as Extremely Low Income. While statewide they find that there are 101 Affordable and Available Rental Units per 100 Households for those At or Below 100% AMI, there are only 27 and 44 units Affordable and Available to those at or below the 30% and 50% AMI levels, respectively. Similarly they find that for households which are in the 0-30%, and 31-50% AMI bands, 88% and 83% units, respectively are Cost Burdened, while only 22% of units between 81 and 100% AMI are. <span class="citation" data-cites="gaprepo">(<a href="#ref-gaprepo" role="doc-biblioref"><span>“Gap Report: Colorado | National Low Income Housing Coalition,”</span> n.d.</a>)</span></p>
+<p>One important footnote to the NLIHC study, however, is that the units identified are not necessarily new housing units which must be built. Rather they indicate households that may reside in housing units already, but for which the cost may be unaffordable. This distinction is important because the housing already exists, and the objective then is to determine a method for making these units affordable to these families, which can occur in different ways, including by subsidizing rents for residents to bridge the gap between 30% of their income and the market rent being charged on their unit. Additionally, because housing prices are determined on the margins, each additional housing unit in theory pushes down housing prices by some incremental amount, holding demand equal. Therefore the number of units necessary to push prices down to a level which becomes affordable to residents at these costs is not necessarily equal to the total number of households experience affordability problems, and, in fact, may be significantly higher or lower depending on these effects and the manner to which lower rents filter down through the housing stock.</p>
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-gaprepo" class="csl-entry" role="listitem">
 <span>“Gap Report: Colorado | National Low Income Housing Coalition.”</span> n.d. <a href="https://nlihc.org/gap/state/co">https://nlihc.org/gap/state/co</a>.

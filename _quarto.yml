@@ -9,6 +9,12 @@ format:
   html:
     comments:
       hypothesis: true
+    search: false
+    robots: noindex
+    include-in-header:
+      - text: |
+          <meta name="robots" content="noindex">
+
   docx: default
   # jats: default
 
@@ -18,6 +24,5 @@ format:
 execute:
   cache: true
   freeze: false
-
 
 
