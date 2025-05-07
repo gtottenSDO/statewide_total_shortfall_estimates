@@ -360,7 +360,13 @@ acs_hr_data <- acs_00_23$PERSON |>
       right = FALSE
     ),
     # flag head of household
-    head_of_household = ifelse(PERNUM == 1, 1, 0)
+    head_of_household = ifelse(PERNUM == 1, 1, 0),
+    age_group_id = cut(
+      AGE,
+      breaks = c(18, 24, 44, 64, Inf),
+      labels = FALSE,
+      include.lowest = TRUE
+    )
   )
 
 acs_hr_srvy <- acs_hr_data |>
@@ -477,6 +483,92 @@ acs_headship_rates |>
       "total" = "Annual"
     )
   )
+```
+
+#### Freddie Mac SDO Age Groups
+
+As a follow up we compare the ACS estimates from implied estimates using SDO data from 2010 on, based on the Household Projections created by SDO. Both household and population by age data data is pulled from the SDO Postgres using tables `estimates.household_projections` and `county_census_grouping_ya_region`.
+
+``` {r}
+library(DBI)
+library(RPostgres)
+# initiate connection to SDO postgres
+sdo_postgres <- dbConnect(
+  RPostgres::Postgres(),
+  dbname = 'dola',
+  host = '104.197.26.248',
+  port = 5433,
+  user = Sys.getenv("sdo_user_r"), #environment variable with read only user needs to be saved
+  password = Sys.getenv("sdo_pw_r"), #environment variable with read only pw needs to be saved
+  bigint = 'integer64'
+)
+
+connections::connection_view(sdo_postgres)
+
+```
+
+``` {r}
+sdo_hh_proj <- tbl(
+  sdo_postgres,
+  Id(
+    schema = "estimates", 
+    table = "household_projections")
+) |> 
+  filter(area_code == 0 & household_type_id ==0) |> 
+  select(area_code, year, age_group_id, age_group = age_group_description, hh = total_households)
+
+sdo_pop <- tbl(
+  sdo_postgres,
+  Id(
+    schema = "estimates",
+    table = "county_sya"
+  )
+) |> 
+  select(area_code = countyfips, year, age, totalpopulation) |> 
+  filter(area_code == 0 & age >=18) |> 
+  mutate(
+    age_group_id = as.integer(cut(
+      age,
+      breaks = c(18, 24, 44, 64, Inf),
+      labels = FALSE,
+      include.lowest = TRUE
+    ))
+  ) |> 
+    summarize(pop=sum(totalpopulation), .by = c(area_code, year, age_group_id))
+  
+sdo_combined <- sdo_hh_proj |> 
+  left_join(
+    sdo_pop,
+    by = join_by(area_code, year, age_group_id)
+  ) |> 
+    mutate(headship_rate = hh/pop) |> 
+    collect()
+
+sdo_combined
+
+```
+
+Next we recalculate the ACS data using SDO Age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
+
+``` {r}
+acs_hr_totl_persons_sdo <- acs_hr_srvy |>
+  survey_count(YEAR, age_group_id, name = "pop_acs")
+
+acs_hr_hh_heads_sdo <- acs_hr_srvy |>
+  filter(PERNUM == 1) |>
+  survey_count(YEAR, age_group_id, name = "hh_acs")
+
+acs_hr_sdo <- acs_hr_totl_persons_sdo |> 
+  left_join(acs_hr_hh_heads_sdo) |> 
+  filter(!is.na(age_group_id)) |> 
+  mutate(headship_rate_acs = hh_acs/pop_acs) |> 
+  rename(year = YEAR)
+
+acs_sdo_comparison <- acs_hr_sdo |> 
+  full_join(sdo_combined) |> 
+  arrange(year, age_group_id)
+
+write_csv(acs_sdo_comparison, "acs_sdo_comparison.csv")
 ```
 
 ### National Association of Realtors
