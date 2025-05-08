@@ -65,7 +65,7 @@ The first step is to create a time series of vacancy rates for the state with AC
 #| label: ipums_load_data
 
 acs_samples <- get_sample_info("usa") |>
-  filter(str_detect(name, pattern = "20\\d+a$")) |> 
+  filter(str_detect(name, pattern = "20\\d+a$")) |>
   pull(name)
 
 ipums_dir <- "data/ipums_raw/"
@@ -74,33 +74,33 @@ file_loc <- paste0(
   ipums_dir,
   ipums_ddi
 )
-  if (file.exists(file_loc)) {
-    acs_ddi <- read_ipums_ddi(file_loc)
-    acs_00_23 <- acs_ddi |>
-      read_ipums_micro_list()
-  } else {
-acs_00_23 <- define_extract_micro(
-      collection = "usa",
-      description = "ACS 1 year samples in Colorado of vacancy variables",
-      samples = acs_samples,
-      variables = list(
-        var_spec("STATEFIP", case_selections = "08"),
-        "COUNTYFIP",
-        "PUMA",
-        "GQ",
-        "OWNERSHP",
-        "VACANCY",
-        "REPWT",
-        "AGE",
-        "REPWTP"
-      ),
-      data_structure = "hierarchical",
-    ) |>
-      submit_extract() |>
-      wait_for_extract() |>
-      download_extract(download_dir = ipums_dir) |>
-      read_ipums_micro()
-  }
+if (file.exists(file_loc)) {
+  acs_ddi <- read_ipums_ddi(file_loc)
+  acs_00_23 <- acs_ddi |>
+    read_ipums_micro_list()
+} else {
+  acs_00_23 <- define_extract_micro(
+    collection = "usa",
+    description = "ACS 1 year samples in Colorado of vacancy variables",
+    samples = acs_samples,
+    variables = list(
+      var_spec("STATEFIP", case_selections = "08"),
+      "COUNTYFIP",
+      "PUMA",
+      "GQ",
+      "OWNERSHP",
+      "VACANCY",
+      "REPWT",
+      "AGE",
+      "REPWTP"
+    ),
+    data_structure = "hierarchical",
+  ) |>
+    submit_extract() |>
+    wait_for_extract() |>
+    download_extract(download_dir = ipums_dir) |>
+    read_ipums_micro()
+}
 
 ```
 
@@ -129,7 +129,7 @@ acs_var_tbl <- acs_info |>
   group_by(var_name) |>
   # add row_numbers
   mutate(row = row_number()) |>
-  ungroup() |> 
+  ungroup() |>
   # pivot wider to generate table
   pivot_wider(
     names_from = var_name,
@@ -137,17 +137,18 @@ acs_var_tbl <- acs_info |>
     # specify order of variable then val/lbl column
     names_glue = "{var_name}_{.value}",
     # use slowest so variables are grouped together
-    names_vary = "slowest") |>
+    names_vary = "slowest"
+  ) |>
   # remove row index as no longer necessary
-  select(-row) |> 
+  select(-row) |>
   # move GQ to end
   relocate(starts_with("GQ"), .after = last_col())
 
 # create GT table with information
 acs_var_tbl_gt <- acs_var_tbl |>
-  gt() |> 
+  gt() |>
   # create spanners based on the column separators defined above
- tab_spanner_delim(delim = "_") |>
+  tab_spanner_delim(delim = "_") |>
   # Replace NA values with empty strings
   sub_missing(
     missing_text = ""
@@ -181,31 +182,32 @@ In order to broadly analyze survey data, and additionally calculate margin of er
 #| label: calc-vacancy
 
 # create survey design object
-acs_hh_data <- acs_00_23$HOUSEHOLD |> 
-# remove GQ units and vacant units 4-6
+acs_hh_data <- acs_00_23$HOUSEHOLD |>
+  # remove GQ units and vacant units 4-6
   filter(
-    GQ %in% c(0,1,2,5) & 
-      !(VACANCY %in% c(4:6, 7, 9))
-    ) |> 
+    GQ %in% c(0, 1, 2, 5) & !(VACANCY %in% c(4:6, 7, 9))
+  ) |>
   # reclassify 3 to 0 and 4-6 to 3
   mutate(
     VACANCY = lbl_relabel(
-      VACANCY, 
-      0 ~.val == 3
-      ),
+      VACANCY,
+      0 ~ .val == 3
+    ),
     OWNERSHP = lbl_relabel(
-      OWNERSHP, 
+      OWNERSHP,
       lbl(0, "Vacant") ~ .val == 0
-      )
-    ) |> 
-      as_factor(levels = "values") |> 
-      as_duckplyr_tibble()
+    )
+  ) |>
+  as_factor(levels = "values") |>
+  as_duckplyr_tibble()
 
-acs_hh_srvy <- acs_hh_data |> 
+acs_hh_srvy <- acs_hh_data |>
   as_survey_design(
-      weight = HHWT,
-        repweights = matches("REPWT[0-9]+"),
-        type = "ACS", mse = TRUE)
+    weight = HHWT,
+    repweights = matches("REPWT[0-9]+"),
+    type = "ACS",
+    mse = TRUE
+  )
 
 ```
 
@@ -227,7 +229,7 @@ acs_vacancy <- acs_hh_srvy |>
   group_by(VACANCY, YEAR) |>
   survey_count(VACANCY, name = "vac") |>
   mutate(
-    vac_moe = vac_se *1.645,
+    vac_moe = vac_se * 1.645,
     tenure = case_when(
       VACANCY == 1 ~ "rent",
       VACANCY == 2 ~ "own"
@@ -241,38 +243,42 @@ acs_occupancy <- acs_hh_srvy |>
   group_by(OWNERSHP, YEAR) |>
   survey_count(OWNERSHP, name = "occ") |>
   mutate(
-    occ_moe = occ_se *1.645,
+    occ_moe = occ_se * 1.645,
     tenure = case_when(
       OWNERSHP == 1 ~ "own",
       OWNERSHP == 2 ~ "rent"
     )
-  )|>
+  ) |>
   filter(!is.na(tenure)) |>
   ungroup()
 
 # calculate total occupied and total vacant
 acs_combined_ov <- acs_vacancy |>
   select(YEAR, tenure, vac, vac_moe) |>
-  left_join(acs_occupancy |>
-              select(YEAR, tenure, occ, occ_moe),
-            by = c("YEAR", "tenure")) %>% # old style pipe needs to be used to pipe . into bind_rows
+  left_join(
+    acs_occupancy |>
+      select(YEAR, tenure, occ, occ_moe),
+    by = c("YEAR", "tenure")
+  ) %>% # old style pipe needs to be used to pipe . into bind_rows
   bind_rows(
     summarize(
       .,
       tenure = "total",
       across(c(vac:occ_moe), sum),
-      .by = YEAR)
+      .by = YEAR
+    )
   ) |>
   mutate(
     total = vac + occ,
-    vac_rate = vac/total
+    vac_rate = vac / total
   ) |>
   group_by(tenure) |>
   mutate(avg_vac_rate = mean(vac_rate)) |>
   ungroup() |>
   mutate(
     diff_from_avg = avg_vac_rate - vac_rate,
-    shortfall = diff_from_avg * total)
+    shortfall = diff_from_avg * total
+  )
 
 current_shortfall <- acs_combined_ov |>
   filter(YEAR == 2023) |>
@@ -304,7 +310,7 @@ current_shortfall <- acs_combined_ov |>
 current_shortfall
 
 # define get_shortfall function to return shortfall based on tenure and format data
-extract_shortfall <- function (ten_type) {
+extract_shortfall <- function(ten_type) {
   current_shortfall |>
     fmt_number(decimals = 1, suffixing = "K") |>
     extract_cells(shortfall, rows = tenure == ten_type)
@@ -340,7 +346,7 @@ hr_{it} = {{hh_{it}}\over{pop_{it}}}
 $$ {#eq-headship-rate}
 
 ```{r}
-#| label: calc-headship-rates
+#| label: process-acs-hr
 
 # Calculate headship rates for each age group for each year from 2000-2023
 acs_hr_data <- acs_00_23$PERSON |>
@@ -348,8 +354,11 @@ acs_hr_data <- acs_00_23$PERSON |>
   as_factor() |>
   as_duckplyr_tibble() |>
   # join GQ data from household level to person level
-  left_join(acs_hh_data |>
-              select(YEAR, SERIAL, GQ), by = c("YEAR", "SERIAL")) |>
+  left_join(
+    acs_hh_data |>
+      select(YEAR, SERIAL, GQ),
+    by = c("YEAR", "SERIAL")
+  ) |>
   filter(GQ %in% c(1, 2, 5)) |>
   # create age bins
   mutate(
@@ -377,6 +386,10 @@ acs_hr_srvy <- acs_hr_data |>
     type = "ACS",
     mse = TRUE
   )
+```
+
+``` {r}
+#| label: calc-acs-hr
 
 # calculate headship rates for each age group for each year from 2000-2023
 acs_hr_totl_persons <- acs_hr_srvy |>
@@ -393,15 +406,22 @@ calc_headship_rates <- function(end_year) {
     group_by(age_bin) |>
     mutate(target_hr = mean(hr[YEAR <= end_year])) |>
     ungroup() |>
-    mutate(target_hh = target_hr * total_persons,
-           missing_hh = target_hh - total_hh) %>%
+    mutate(
+      target_hh = target_hr * total_persons,
+      missing_hh = target_hh - total_hh
+    ) %>%
     bind_rows(
       summarize(
         .,
         age_bin = "total",
-        across(c(
-          total_hh:total_persons_se, target_hh, missing_hh
-        ), sum),
+        across(
+          c(
+            total_hh:total_persons_se,
+            target_hh,
+            missing_hh
+          ),
+          sum
+        ),
         hr = total_hh / total_persons,
         target_hr = target_hh / total_persons,
         .by = YEAR
@@ -449,25 +469,25 @@ This is largely driven by the large increase in headship rates beginning around 
 #| label: fig-headship-rates
 #| fig-cap: "Headship Rates Over Time"
 
-acs_headship_rates |> 
+acs_headship_rates |>
   filter(age_bin == "total") %>%
   bind_rows(
-    expand_grid
-    (YEAR = 2000:2023,
+    expand_grid(
+      YEAR = 2000:2023,
       summarize(
         .,
         age_bin = "avg",
         hr = mean(hr)
-        )
       )
-    ) |> 
+    )
+  ) |>
   ggplot(
     aes(
-      x = YEAR, 
-      y = hr, 
+      x = YEAR,
+      y = hr,
       color = age_bin
-      )
-    ) +
+    )
+  ) +
   geom_line() +
   scale_y_continuous(
     labels = label_percent()
@@ -490,6 +510,8 @@ acs_headship_rates |>
 As a follow up we compare the ACS estimates from implied estimates using SDO data from 2010 on, based on the Household Projections created by SDO. Both household and population by age data data is pulled from the SDO Postgres using tables `estimates.household_projections` and `county_census_grouping_ya_region`.
 
 ``` {r}
+#| label: connect_pg_sdo
+
 library(DBI)
 library(RPostgres)
 # initiate connection to SDO postgres
@@ -498,8 +520,8 @@ sdo_postgres <- dbConnect(
   dbname = 'dola',
   host = '104.197.26.248',
   port = 5433,
-  user = Sys.getenv("sdo_user_r"), #environment variable with read only user needs to be saved
-  password = Sys.getenv("sdo_pw_r"), #environment variable with read only pw needs to be saved
+  user = Sys.getenv("SDO_USER_R"), #environment variable with read only user needs to be saved
+  password = Sys.getenv("SDO_PW_R"), #environment variable with read only pw needs to be saved
   bigint = 'integer64'
 )
 
@@ -508,14 +530,23 @@ connections::connection_view(sdo_postgres)
 ```
 
 ``` {r}
+#| label: calc_sdo_hr
+
 sdo_hh_proj <- tbl(
   sdo_postgres,
   Id(
-    schema = "estimates", 
-    table = "household_projections")
-) |> 
-  filter(area_code == 0 & household_type_id ==0) |> 
-  select(area_code, year, age_group_id, age_group = age_group_description, hh = total_households)
+    schema = "estimates",
+    table = "household_projections"
+  )
+) |>
+  filter(area_code == 0 & household_type_id == 0) |>
+  select(
+    area_code,
+    year,
+    age_group_id,
+    age_group = age_group_description,
+    hh = total_households
+  )
 
 sdo_pop <- tbl(
   sdo_postgres,
@@ -523,9 +554,9 @@ sdo_pop <- tbl(
     schema = "estimates",
     table = "county_sya"
   )
-) |> 
-  select(area_code = countyfips, year, age, totalpopulation) |> 
-  filter(area_code == 0 & age >=18) |> 
+) |>
+  select(area_code = countyfips, year, age, totalpopulation) |>
+  filter(area_code == 0 & age >= 18) |>
   mutate(
     age_group_id = as.integer(cut(
       age,
@@ -533,40 +564,85 @@ sdo_pop <- tbl(
       labels = FALSE,
       include.lowest = TRUE
     ))
-  ) |> 
-    summarize(pop=sum(totalpopulation), .by = c(area_code, year, age_group_id))
-  
-sdo_combined <- sdo_hh_proj |> 
+  ) |>
+  summarize(
+    pop = sum(totalpopulation),
+    .by = c(area_code, year, age_group_id)
+  ) |>
+  collect()
+
+sdo_pop <- sdo_pop |>
+  bind_rows(
+    sdo_pop |>
+      summarize(
+        age_group_id = 0,
+        pop = sum(pop),
+        .by = c(area_code, year)
+      )
+  )
+
+sdo_combined <- sdo_hh_proj |>
+  collect() |>
   left_join(
     sdo_pop,
     by = join_by(area_code, year, age_group_id)
-  ) |> 
-    mutate(headship_rate = hh/pop) |> 
-    collect()
-
-sdo_combined
-
+  ) |>
+  mutate(
+    headship_rate = hh / pop
+  ) |>
+  arrange(area_code, year, age_group_id)
 ```
 
 Next we recalculate the ACS data using SDO Age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
 
 ``` {r}
-acs_hr_totl_persons_sdo <- acs_hr_srvy |>
-  survey_count(YEAR, age_group_id, name = "pop_acs")
+#| label: calc_hr_acs_sdo
+
+acs_hr_tot_persons_sdo <- acs_hr_srvy |>
+  survey_count(YEAR, age_group_id, name = "pop") |>
+  bind_rows(
+    acs_hr_srvy |>
+      survey_count(YEAR, name = "pop") |>
+      mutate(age_group_id = 0, .after = YEAR)
+  ) |>
+  arrange(YEAR, age_group_id)
 
 acs_hr_hh_heads_sdo <- acs_hr_srvy |>
   filter(PERNUM == 1) |>
-  survey_count(YEAR, age_group_id, name = "hh_acs")
+  survey_count(YEAR, age_group_id, name = "hh") |>
+  bind_rows(
+    acs_hr_srvy |>
+      filter(PERNUM == 1) |>
+      survey_count(YEAR, name = "hh") |>
+      mutate(age_group_id = 0, .after = YEAR)
+  ) |>
+  arrange(YEAR, age_group_id)
 
-acs_hr_sdo <- acs_hr_totl_persons_sdo |> 
-  left_join(acs_hr_hh_heads_sdo) |> 
-  filter(!is.na(age_group_id)) |> 
-  mutate(headship_rate_acs = hh_acs/pop_acs) |> 
+acs_hr_sdo <- acs_hr_tot_persons_sdo |>
+  left_join(acs_hr_hh_heads_sdo) |>
+  filter(!is.na(age_group_id)) |>
+  mutate(
+    headship_rate = hh / pop
+  ) |>
   rename(year = YEAR)
 
-acs_sdo_comparison <- acs_hr_sdo |> 
-  full_join(sdo_combined) |> 
-  arrange(year, age_group_id)
+acs_sdo_combined <- acs_hr_sdo |>
+  full_join(
+    sdo_combined,
+    suffix = c("_acs", "_sdo"),
+    by = join_by(year, age_group_id)
+  ) |>
+  arrange(year, age_group_id) |>
+  mutate(
+    pop_diff = pop_acs - pop_sdo,
+    check_pop = if_else(abs(pop_diff) <= pop_se, TRUE, FALSE)
+  ) |> 
+    select(
+      year, age_group_id, age_group,
+      pop_acs, pop_se, pop_sdo, pop_diff, check_pop,
+      hh_acs, hh_se,
+      headship_rate_acs, headship_rate_sdo
+    )
 
 write_csv(acs_sdo_comparison, "acs_sdo_comparison.csv")
 ```
