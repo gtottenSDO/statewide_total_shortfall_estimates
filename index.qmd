@@ -1,7 +1,7 @@
 ---
 title: Estimating Colorado's Housing Shortfall
 authors:
-  - name: Greg Totten
+  - name: Greg Totten & Neal Marquez
     affiliation: Colorado State Demography Office
 bibliography: references.bib
 
@@ -9,7 +9,6 @@ html:
   include-in-header:
     - text: |
         <meta name="robots" content="noindex">
-
 ---
 
 ```{r}
@@ -18,6 +17,7 @@ html:
 
 library(tidyverse)
 library(ipumsr)
+library(hudr)
 library(duckplyr)
 library(tidycensus)
 library(gt)
@@ -42,85 +42,96 @@ In between these two estimates are a range of scenarios that might be indicative
 
 Data primarily comes from the most recent American Community Survey ("ACS") one year estimates for Colorado, and data from the Colorado State Demography Office ("SDO"). One year ACS estimates are primarily used as the population of the state is large enough to allow for the use of such estimates. If applying similar methodologies at smaller geography levels (such as county level), it may be necessary to instead use 5 year estimates. Additionally, some methods of deriving estimates, such as by analyzing Public Use Microdata Sample ("PUMS") data may not be possible for all methods. As such many methods determined here may only be applicable at the state level.
 
-## Examples
+## Methodology
 
-### Harvard Joint Center for Housing Studies Blog
+The methodology used in this analysis utilizes a methodology that larges combines approaches utilized by Up For Growth Housing and Freddie Mac in respective reports published by each [@upforgrowth; @khater2021; @khater2018]. The approach taken begins by comparing Colorado statewide headship rates follows @upforgrowth by applying headship rates (i.e., the percentage of people in a given age group who are head of households) circa 2000 to the 2023 working age population to determine how many households Colorado would have had in 2023 if the population headed households in a similar manner to 2000. The difference between the actual number of households, and those which would have been formed given the earlier headship rates constitutes the shortage attributable to this change in headship rate patterns, while an additional adjustment is then made for changes in vacancy rates among all households during the same period. Where this study differs, however, is that the headship rates are adjusted for changes in the cost burden ratio (${Housing Cost}\over{Income}$) also occurring during the same period, in a method drawing inspiration from that of @khater2021.
 
-One resource that compares four relatively recent national studies attempting to determine housing shortfalls are a January 2024 blog entry from the Harvard Joint Center for Housing Studies ("JHCS") [@mccue2024]. The four studies each utilize different methodologies and resulting estimates covering different years. The four studies are:
-
-1.  [National Association of Home Builders (NAHB) 2021](https://www.freddiemac.com/research/insight/20210507-housing-supply)
-2.  [Freddie Mac 2020](https://www.freddiemac.com/research/insight/20210507-housing-supply)
-3.  [National Association of Realtors (NAR) 2021](https://www.nar.realtor/advocacy/housing-is-critical-infrastructure)
-4.  [National Low Income Housing Coalition (NLIHC)](https://nlihc.org/gap)
-
-The following sections will provide estimates of the housing shortage in Colorado based on each of these study methodologies.
-
-### National Association of Home Builders
-
-The NAHB study estimates the national housing shortage by examining the difference in ACS vacancy rates in the current year from their long run average. This resulted in an estimated shortage of 1.5 million units.
+::: callout-note
+Neal - please feel free to adjust language above - especially around characterization of the adjustments made for cost burden ratio.
+:::
 
 The first step is to create a time series of vacancy rates for the state with ACS data. This data is accessed from the IPUMS USA database [@ruggles2024a] using the `ipumsr` package in R [@ipumsr].
 
 ```{r}
-#| label: ipums_load_data
+#| label: load_data_ipums
 
 acs_samples <- get_sample_info("usa") |>
-  filter(str_detect(name, pattern = "20\\d+a$")) |>
+  filter(str_detect(name, pattern = "(2000|2023)a$")) |>
   pull(name)
 
-ipums_dir <- "data/ipums_raw/"
-ipums_ddi <- "usa_00081.xml"
-file_loc <- paste0(
-  ipums_dir,
-  ipums_ddi
+ipums_file <- list()
+ipums_file$base <- "usa_00092"
+ipums_file$dir <- "data/ipums_raw/"
+ipums_file$loc <- paste0(
+  ipums_file$dir,
+  ipums_file$base
 )
-if (file.exists(file_loc)) {
-  acs_ddi <- read_ipums_ddi(file_loc)
-  acs_00_23 <- acs_ddi |>
-    read_ipums_micro_list()
-} else {
-  acs_00_23 <- define_extract_micro(
+
+ipums_file$csv <- paste0(ipums_file$loc, ".csv.gz")
+ipums_file$ddi <- paste0(ipums_file$loc, ".xml")
+ipums_file$json <- paste0(ipums_file$loc, ".json")
+
+if (!file.exists(ipums_file$ddi)) {
+  ipums_extract <- define_extract_micro(
     collection = "usa",
-    description = "ACS 1 year samples in Colorado of vacancy variables",
+    description = "Most recent ACS 1-year samples for Colorado",
     samples = acs_samples,
-    variables = list(
-      var_spec("STATEFIP", case_selections = "08"),
-      "COUNTYFIP",
-      "PUMA",
-      "GQ",
-      "OWNERSHP",
-      "VACANCY",
-      "REPWT",
-      "AGE",
-      "REPWTP"
-    ),
     data_structure = "hierarchical",
+    variables = list(
+      var_spec("statefip", case_selections = "08"),
+      'year',
+      'sample',
+      'serial',
+      'cbserial',
+      'hhwt',
+      'cluster',
+      'strata',
+      'gq',
+      'age',
+      'ownershp',
+      'vacancy',
+      'owncost',
+      'rent',
+      'hhincome',
+      'pernum',
+      'perwt',
+      "repwt",
+      "repwtp"
+    )
   ) |>
     submit_extract() |>
     wait_for_extract() |>
-    download_extract(download_dir = ipums_dir) |>
-    read_ipums_micro()
+    download_extract(download_dir = ipums_file$dir)
 }
+
+ipums_ddi <- read_ipums_ddi(ipums_file$ddi, lower_vars = TRUE)
+# create ipums_vars from the DDI which includes variable information
+ipums_vars <- ipums_var_info(ipums_ddi)
+
+ipums_extract <- read_ipums_micro_list(ipums_ddi, var_attrs = NULL) |>
+  map(as_duckdb_tibble)
 
 ```
 
-Vacancy rates are calculated based on both the `OWNERSHP` and `VACANCY` variables. Additionally the `GQ` variable is used to filter out group quarters.
+```{r}
+#| label: load_data_hud
+
+```
+
+Vacancy rates are calculated based on both the `ownershp` and `vacancy` variables. Additionally the `gq` variable is used to filter out group quarters.
 
 In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents
 
 ```{r}
 #| label: ipums_variable_labels
 
-# create acs_info from the DDI which includes variable information
-acs_info <- ipums_var_info(acs_ddi)
-
 # generate table with variable information
 # table will include columns {VAR}_val, and {VAR}_lbl with the value and
 # label for each variable. This is setup so tab_spanner_delim can be used to
 # separate out columns in a GT table
-acs_var_tbl <- acs_info |>
+ipums_var_tbl <- ipums_vars |>
   # only include necessary variables
-  filter(var_name %in% c('OWNERSHP', 'VACANCY', "GQ")) |>
+  filter(var_name %in% c('ownershp', 'vacancy', "gq")) |>
   # remove other columns
   select(var_name, val_labels) |>
   # unnest labels from nested columns
@@ -141,11 +152,11 @@ acs_var_tbl <- acs_info |>
   ) |>
   # remove row index as no longer necessary
   select(-row) |>
-  # move GQ to end
-  relocate(starts_with("GQ"), .after = last_col())
+  # move gq to end
+  relocate(starts_with("gq"), .after = last_col())
 
 # create GT table with information
-acs_var_tbl_gt <- acs_var_tbl |>
+ipums_var_tbl_gt <- ipums_var_tbl |>
   gt() |>
   # create spanners based on the column separators defined above
   tab_spanner_delim(delim = "_") |>
@@ -157,82 +168,82 @@ acs_var_tbl_gt <- acs_var_tbl |>
 
 ```{r}
 #| label: tbl-pums-vars
-#| tbl-cap: "Values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables."
+#| tbl-cap: "Values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables."
 
 # display table
-acs_var_tbl_gt
+ipums_var_tbl_gt
 
 ```
 
-@tbl-pums-vars includes the values and respective labels for each of the `OWNERSHP`, `VACANCY`, and `GQ` variables.
+@tbl-pums-vars includes the values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables.
 
-The N/A labels associated with `val=0` for the `OWNERSHP` and `VACANCY` variables is reflective of units which are Vacant, or Occupied, respectively.
+The N/A labels associated with `val=0` for the `ownershp` and `vacancy` variables is reflective of units which are Vacant, or Occupied, respectively.
 
 Given these values we then need to establish filtering parameters for determining vacancy rates.
 
-1.  `GQ <= 2 OR GQ ==5` filter out GQ units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
-2.  `VACANCY <=2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
+1.  `gq <= 2 OR gq ==5` filter out gq units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
+2.  `vacancy <= 2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
 3.  Leave Ownership as is.
 
 [^1]: Note to self - review these definitions to see if we want to exclude any of these groupings.
 
-In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters GQ units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies `VACANCY == 3` to `0` as occupied. Finally, `N/A` values are relabeled for each of the OWNERSHP, and VACANCY variables to reflect that these reflect Vacant and Occupied units, respectively.
+In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters gq units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies `vacancy == 3` to `0` as occupied. Finally, `N/A` values are relabeled for each of the ownershp, and vacancy variables to reflect that these reflect Vacant and Occupied units, respectively.
 
 ```{r}
 #| label: calc-vacancy
 
 # create survey design object
-acs_hh_data <- acs_00_23$HOUSEHOLD |>
-  # remove GQ units and vacant units 4-6
+acs_hh_data <- ipums_extract$HOUSEHOLD |>
+  # remove gq units and vacant units 4-6
   filter(
-    GQ %in% c(0, 1, 2, 5) & !(VACANCY %in% c(4:6, 7, 9))
-  ) |>
-  # reclassify 3 to 0 and 4-6 to 3
-  mutate(
-    VACANCY = lbl_relabel(
-      VACANCY,
-      0 ~ .val == 3
-    ),
-    OWNERSHP = lbl_relabel(
-      OWNERSHP,
-      lbl(0, "Vacant") ~ .val == 0
-    )
-  ) |>
-  as_factor(levels = "values") |>
-  as_duckplyr_tibble()
+    gq %in% c(0, 1, 2, 5) & !(vacancy %in% c(4:6, 7, 9))
+  )
+# reclassify 3 to 0 and 4-6 to 3
+# mutate(
+#   vacancy = lbl_relabel(
+#     vacancy,
+#     0 ~ .val == 3
+#   ),
+#   ownershp = lbl_relabel(
+#     ownershp,
+#     lbl(0, "Vacant") ~ .val == 0
+#   )
+# # ) |>
+# as_factor(levels = "values") |>
+# as_duckplyr_tibble()
 
 acs_hh_srvy <- acs_hh_data |>
   as_survey_design(
-    weight = HHWT,
-    repweights = matches("REPWT[0-9]+"),
+    weight = hhwt,
+    repweights = matches("repwt[0-9]+"),
     type = "ACS",
     mse = TRUE
   )
 
 ```
 
-Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $ \sum VACANT_{ot} \over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
+Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as \$ \sum VACANT\_{ot} \over {\\\\\\\\sum VACANT\\\\\\\_{ot}+ \\\\\\\\sum OCCUPIED\\\\\\\_{ot}}\$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
 
-[^2]: For this purpose we make the assumption that `VACANCY == 1` (For rent or sale) is for Rent, and `VACANCY ==2` (For sale only) is for sale in order to the simplify the analysis.
+[^2]: For this purpose we make the assumption that `vacancy == 1` (For rent or sale) is for Rent, and `vacancy ==2` (For sale only) is for sale in order to the simplify the analysis.
 
 [^3]: Note to self - verify that margin of error are additive
 
 Once the vacancy rates are calculated, we then calculate the average vacancy rate for each year. To get an annual shortfall we then take the difference between the average vacancy rate and the current vacancy rate. Applying this difference to the total number of units for each year gives us the annual shortfall.
 
-In combining vacancy rates a `tenure` variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value `rent` for `OWNSHP == 2` and `VACANCY == 1`, and `own` for `OWNSHP == 1` and `VACANCY == 2`; consistent with the classifications determined above.
+In combining vacancy rates a `tenure` variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value `rent` for `OWNSHP == 2` and `vacancy == 1`, and `own` for `OWNSHP == 1` and `vacancy == 2`; consistent with the classifications determined above.
 
 ```{r}
 #| label: calc-nahb-vacancy
 
 # calculate vacancy
 acs_vacancy <- acs_hh_srvy |>
-  group_by(VACANCY, YEAR) |>
-  survey_count(VACANCY, name = "vac") |>
+  group_by(vacancy, year) |>
+  survey_count(vacancy, name = "vac") |>
   mutate(
     vac_moe = vac_se * 1.645,
     tenure = case_when(
-      VACANCY == 1 ~ "rent",
-      VACANCY == 2 ~ "own"
+      vacancy == 1 ~ "rent",
+      vacancy == 2 ~ "own"
     )
   ) |>
   filter(!is.na(tenure)) |>
@@ -240,13 +251,13 @@ acs_vacancy <- acs_hh_srvy |>
 
 # calculate occupied
 acs_occupancy <- acs_hh_srvy |>
-  group_by(OWNERSHP, YEAR) |>
-  survey_count(OWNERSHP, name = "occ") |>
+  group_by(ownershp, year) |>
+  survey_count(ownershp, name = "occ") |>
   mutate(
     occ_moe = occ_se * 1.645,
     tenure = case_when(
-      OWNERSHP == 1 ~ "own",
-      OWNERSHP == 2 ~ "rent"
+      ownershp == 1 ~ "own",
+      ownershp == 2 ~ "rent"
     )
   ) |>
   filter(!is.na(tenure)) |>
@@ -254,18 +265,18 @@ acs_occupancy <- acs_hh_srvy |>
 
 # calculate total occupied and total vacant
 acs_combined_ov <- acs_vacancy |>
-  select(YEAR, tenure, vac, vac_moe) |>
+  select(year, tenure, vac, vac_moe) |>
   left_join(
     acs_occupancy |>
-      select(YEAR, tenure, occ, occ_moe),
-    by = c("YEAR", "tenure")
+      select(year, tenure, occ, occ_moe),
+    by = c("year", "tenure")
   ) %>% # old style pipe needs to be used to pipe . into bind_rows
   bind_rows(
     summarize(
       .,
       tenure = "total",
       across(c(vac:occ_moe), sum),
-      .by = YEAR
+      .by = year
     )
   ) |>
   mutate(
@@ -281,8 +292,8 @@ acs_combined_ov <- acs_vacancy |>
   )
 
 current_shortfall <- acs_combined_ov |>
-  filter(YEAR == 2023) |>
-  select(-YEAR) |>
+  filter(year == 2023) |>
+  select(-year) |>
   mutate(tenure = str_to_title(tenure)) |>
   gt() |>
   fmt_number(c(vac:total, shortfall), decimals = 0) |>
@@ -294,8 +305,8 @@ current_shortfall <- acs_combined_ov |>
     occ = "Occupied",
     occ_moe = "Margin of Error",
     total = "Total",
-    vac_rate = "Vacancy Rate",
-    avg_vac_rate = "Average Vacancy Rate",
+    vac_rate = "vacancy Rate",
+    avg_vac_rate = "Average vacancy Rate",
     diff_from_avg = "Difference from Average",
     shortfall = "Shortfall"
   ) |>
@@ -348,108 +359,186 @@ $$ {#eq-headship-rate}
 ```{r}
 #| label: process-acs-hr
 
-# Calculate headship rates for each age group for each year from 2000-2023
-acs_hr_data <- acs_00_23$PERSON |>
-  zap_labels(AGE) |>
-  as_factor() |>
-  as_duckplyr_tibble() |>
-  # join GQ data from household level to person level
+# Calculate headship rates for each age group
+acs_data <- ipums_extract$PERSON |>
+  # join gq data from household level to person level
   left_join(
+    # join household data
     acs_hh_data |>
-      select(YEAR, SERIAL, GQ),
-    by = c("YEAR", "SERIAL")
+      select(year, serial, gq, hhincome, ownershp, rent, owncost) |>
+      left_join(
+        # join mfi data
+        tibble(
+          year = c(2000, 2023),
+          mfi = c(54900, 114500)
+        ),
+        by = c("year")
+      ),
+    by = c("year", "serial")
   ) |>
-  filter(GQ %in% c(1, 2, 5)) |>
+  filter(gq %in% c(1, 2, 5)) |>
+  # add number of people in household based on number of person records
+  add_count(serial, name = 'hhsize') |>
   # create age bins
   mutate(
     # generate age breaks for cuts
     age_bin = cut(
-      AGE,
+      age,
       breaks = c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, Inf),
       right = FALSE
     ),
     # flag head of household
-    head_of_household = ifelse(PERNUM == 1, 1, 0),
-    age_group_id = cut(
-      AGE,
-      breaks = c(18, 24, 44, 64, Inf),
-      labels = FALSE,
+    head_of_household = ifelse(pernum == 1, 1, 0),
+    # add age groups
+    age_bin_large = cut(
+      age,
+      breaks = c(
+        0,
+        18,
+        25,
+        45,
+        65,
+        Inf
+      ),
+      labels = c(
+        "Under 18",
+        "18-24",
+        "25-44",
+        "45-64",
+        "65 and over"
+      ),
+      right = FALSE,
+      ordered_result = TRUE
+    ),
+    # add household size adjustment factor for assigning ami group
+    hhadj = case_when(
+      hhsize < 4 ~ 1 - (4 - hhsize) * .1,
+      hhsize > .4 ~ 1 + (hhsize - 4) * .08,
+      .default = 1
+    ),
+    # calculate applicable ami for household
+    mfi_hh = mfi * hhadj,
+    # calculate hh percentage of ami
+    pct_mfi = pmax(hhincome, 1) / mfi_hh * 100,
+    ami_group = cut(
+      pct_mfi,
+      breaks = c(
+        0,
+        30,
+        60,
+        80,
+        100,
+        Inf
+      ),
+      right = FALSE,
+      include.lowest = TRUE
+    ),
+    housing_cost_pct = case_when(
+      ownershp == 2 ~ rent * 12 / pmax(hhincome, 1),
+      ownershp == 1 ~ owncost * 12 / pmax(hhincome, 1),
+      .default = NA_real_
+    ) *
+      100,
+    cost_burdened_level = cut(
+      housing_cost_pct,
+      breaks = c(0, 30, 50, Inf),
+      right = FALSE,
       include.lowest = TRUE
     )
   )
 
-acs_hr_srvy <- acs_hr_data |>
-  # create survey object from acs_hr_data dataframe
+
+acs_hr_srvy <- acs_data |>
+  # create survey object from acs_data dataframe
   as_survey_design(
-    weight = PERWT,
-    repweights = matches("REPWTP[0-9]+"),
+    weight = perwt,
+    repweights = matches("repwtp[0-9]+"),
     type = "ACS",
     mse = TRUE
   )
+
+#  verify hhsizes all match highest pernum record value
+# acs_data |>
+#   group_by(serial, hhsize) |>
+#   summarize(max_per = max(pernum)) |>
+#   mutate(check = hhsize - max_per) |>
+#   filter(check != 0)
 ```
 
-``` {r}
+```{r}
 #| label: calc-acs-hr
 
 # calculate headship rates for each age group for each year from 2000-2023
 acs_hr_totl_persons <- acs_hr_srvy |>
-  survey_count(YEAR, age_bin, name = "total_persons")
+  survey_count(
+    year,
+    age_bin,
+    ami_group,
+    cost_burdened_level,
+    name = "total_persons"
+  )
 
 acs_hr_hh_heads <- acs_hr_srvy |>
-  filter(PERNUM == 1) |>
-  survey_count(YEAR, age_bin, name = "total_hh")
+  filter(pernum == 1 & gq %in% c(1, 3, 5)) |>
+  survey_count(
+    year,
+    age_bin,
+    ami_group,
+    cost_burdened_level,
+    name = "total_hh"
+  )
 
-calc_headship_rates <- function(end_year) {
-  acs_hr_hh_heads |>
-    left_join(acs_hr_totl_persons, by = c("YEAR", "age_bin")) |>
-    mutate(hr = total_hh / total_persons) |>
-    group_by(age_bin) |>
-    mutate(target_hr = mean(hr[YEAR <= end_year])) |>
-    ungroup() |>
-    mutate(
-      target_hh = target_hr * total_persons,
-      missing_hh = target_hh - total_hh
-    ) %>%
-    bind_rows(
-      summarize(
-        .,
-        age_bin = "total",
-        across(
-          c(
-            total_hh:total_persons_se,
-            target_hh,
-            missing_hh
-          ),
-          sum
+acs_headship_rates <- acs_hr_hh_heads |>
+  left_join(
+    acs_hr_totl_persons,
+    by = c("year", "age_bin", "ami_group", "cost_burdened_level")
+  ) |>
+  mutate(hr = total_hh / total_persons) |>
+  group_by(age_bin, ami_group, cost_burdened_level) |>
+  mutate(target_hr = hr[year == 2000]) |>
+  ungroup() |>
+  mutate(
+    target_hh = target_hr * total_persons,
+    missing_hh = target_hh - total_hh
+  ) %>%
+  bind_rows(
+    summarize(
+      .,
+      age_bin = "total",
+      across(
+        c(
+          total_hh:total_persons_se,
+          target_hh,
+          missing_hh
         ),
-        hr = total_hh / total_persons,
-        target_hr = target_hh / total_persons,
-        .by = YEAR
-      )
-    ) |>
-    mutate(end_year = end_year, .before = 1)
-}
+        sum
+      ),
+      hr = total_hh / total_persons,
+      target_hr = target_hh / total_persons,
+      .by = year
+    )
+  )
 
-acs_headship_rates <- calc_headship_rates(2015)
+
 ```
 
 Using this analysis we find that the target number of households based on target headship rates is extremely sensitive to the end year of the target period. To demonstrate this we run the analysis based on end years of 2010, 2015, and 2020, showing the results for the "total" age_bin.
 
 ```{r}
 #| label: tbl-headship-rates-ye
-#| tbl-cap: "Headship Rates by Final Year of Averaging"
+#| tbl-cap: "Headship Rates by Final year of Averaging"
 
 headship_rates_by_end_year <-
   map(c(2010, 2015, 2020), calc_headship_rates) |>
   bind_rows() |>
-  filter(age_bin == "total" & YEAR == 2023) |>
-  select(-YEAR, -age_bin) |>
+  filter(age_bin == "total" & year == 2023) |>
+  select(-year, -age_bin) |>
   gt() |>
   fmt_number(!end_year, decimals = 0) |>
   fmt_percent(hr:target_hr) |>
   cols_align("center") |>
   cols_label(
-    end_year = "End Year",
+    end_year = "End year",
     total_persons = "Total Persons",
     total_hh = "Total Households",
     target_hh = "Target Households",
@@ -473,7 +562,7 @@ acs_headship_rates |>
   filter(age_bin == "total") %>%
   bind_rows(
     expand_grid(
-      YEAR = 2000:2023,
+      year = 2000:2023,
       summarize(
         .,
         age_bin = "avg",
@@ -483,7 +572,7 @@ acs_headship_rates |>
   ) |>
   ggplot(
     aes(
-      x = YEAR,
+      x = year,
       y = hr,
       color = age_bin
     )
@@ -493,7 +582,7 @@ acs_headship_rates |>
     labels = label_percent()
   ) +
   labs(
-    x = "Year",
+    x = "year",
     y = "Headship Rate",
     color = "Overall Headship Rate"
   ) +
@@ -505,11 +594,11 @@ acs_headship_rates |>
   )
 ```
 
-#### Freddie Mac SDO Age Groups
+#### Freddie Mac SDO age Groups
 
 As a follow up we compare the ACS estimates from implied estimates using SDO data from 2010 on, based on the Household Projections created by SDO. Both household and population by age data data is pulled from the SDO Postgres using tables `estimates.household_projections` and `county_census_grouping_ya_region`.
 
-``` {r}
+```{r}
 #| label: connect_pg_sdo
 
 library(DBI)
@@ -529,7 +618,7 @@ connections::connection_view(sdo_postgres)
 
 ```
 
-``` {r}
+```{r}
 #| label: calc_sdo_hr
 
 sdo_hh_proj <- tbl(
@@ -593,30 +682,30 @@ sdo_combined <- sdo_hh_proj |>
   arrange(area_code, year, age_group_id)
 ```
 
-Next we recalculate the ACS data using SDO Age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
+Next we recalculate the ACS data using SDO age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
 
-``` {r}
+```{r}
 #| label: calc_hr_acs_sdo
 
 acs_hr_tot_persons_sdo <- acs_hr_srvy |>
-  survey_count(YEAR, age_group_id, name = "pop") |>
+  survey_count(year, age_group_id, name = "pop") |>
   bind_rows(
     acs_hr_srvy |>
-      survey_count(YEAR, name = "pop") |>
-      mutate(age_group_id = 0, .after = YEAR)
+      survey_count(year, name = "pop") |>
+      mutate(age_group_id = 0, .after = year)
   ) |>
-  arrange(YEAR, age_group_id)
+  arrange(year, age_group_id)
 
 acs_hr_hh_heads_sdo <- acs_hr_srvy |>
-  filter(PERNUM == 1) |>
-  survey_count(YEAR, age_group_id, name = "hh") |>
+  filter(pernum == 1) |>
+  survey_count(year, age_group_id, name = "hh") |>
   bind_rows(
     acs_hr_srvy |>
-      filter(PERNUM == 1) |>
-      survey_count(YEAR, name = "hh") |>
-      mutate(age_group_id = 0, .after = YEAR)
+      filter(pernum == 1) |>
+      survey_count(year, name = "hh") |>
+      mutate(age_group_id = 0, .after = year)
   ) |>
-  arrange(YEAR, age_group_id)
+  arrange(year, age_group_id)
 
 acs_hr_sdo <- acs_hr_tot_persons_sdo |>
   left_join(acs_hr_hh_heads_sdo) |>
@@ -624,7 +713,7 @@ acs_hr_sdo <- acs_hr_tot_persons_sdo |>
   mutate(
     headship_rate = hh / pop
   ) |>
-  rename(year = YEAR)
+  rename(year = year)
 
 acs_sdo_combined <- acs_hr_sdo |>
   full_join(
@@ -636,13 +725,21 @@ acs_sdo_combined <- acs_hr_sdo |>
   mutate(
     pop_diff = pop_acs - pop_sdo,
     check_pop = if_else(abs(pop_diff) <= pop_se, TRUE, FALSE)
-  ) |> 
-    select(
-      year, age_group_id, age_group,
-      pop_acs, pop_se, pop_sdo, pop_diff, check_pop,
-      hh_acs, hh_se,
-      headship_rate_acs, headship_rate_sdo
-    )
+  ) |>
+  select(
+    year,
+    age_group_id,
+    age_group,
+    pop_acs,
+    pop_se,
+    pop_sdo,
+    pop_diff,
+    check_pop,
+    hh_acs,
+    hh_se,
+    headship_rate_acs,
+    headship_rate_sdo
+  )
 
 write_csv(acs_sdo_comparison, "acs_sdo_comparison.csv")
 ```
