@@ -50,7 +50,9 @@ The methodology used in this analysis utilizes a methodology that larges combine
 Neal - please feel free to adjust language above - especially around characterization of the adjustments made for cost burden ratio.
 :::
 
-The first step is to create a time series of vacancy rates for the state with ACS data. This data is accessed from the IPUMS USA database [@ruggles2024a] using the `ipumsr` package in R [@ipumsr].
+## Analysis
+
+PUMS data is first extracted using the IPUMS USA database [@ruggles2024a] via the `ipumsr` package in R [@ipumsr].
 
 ```{r}
 #| label: load_data_ipums
@@ -113,228 +115,21 @@ ipums_extract <- read_ipums_micro_list(ipums_ddi, var_attrs = NULL) |>
 
 ```
 
-```{r}
-#| label: load_data_hud
+### Headship Rate Calculations
 
-```
+Headship Rates are first calculated for 2000 and 2023, based on the PUMS data for each year, grouped by age group[^Additionally these are grouped into AMI and cost burdened designations for potential additional analysis]. The headship rate is calculated as the number of households with a head of household in age group $i$ divided by the total number of households in age group $i$, as provided in @eq-headship-rate. These rates are only calculated for households headed by persons under the age of 65, as changes in headship rates for persons 65 and older are likely determined more by age demographic factors, rather than for economic reasons related to affordability.
 
-Vacancy rates are calculated based on both the `ownershp` and `vacancy` variables. Additionally the `gq` variable is used to filter out group quarters.
+$$
+hr_{it} = {{hh_{it}}\over{pop_{it}}}
+$$ {#eq-headship-rate}
 
-In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents
+The theoretical motivation behind this approach is that high housing costs may be causing people who would otherwise form their own household to instead "double up", either by continuing to live with a parent or other relative, or by renting a room with roommates. If housing were more available they might instead live on their own. Based on this premise in a more affordable housing market we would expect higher levels of headship rates, as more people in a given age group would then be heading households themselves, rather than living with others for economic reasons.
 
-```{r}
-#| label: ipums_variable_labels
+Recognizing that affordability is not the only determinant of headship rates (for example, the rates at which people might be living with a spouse or partner), we additionally control for headship rates by utilizing relative cost burden (calculated as ${total housing costs}\over{total household income}$) as an additional control, allowing us to attempt to better isolate the effect of housing costs on headship rates.
 
-# generate table with variable information
-# table will include columns {VAR}_val, and {VAR}_lbl with the value and
-# label for each variable. This is setup so tab_spanner_delim can be used to
-# separate out columns in a GT table
-ipums_var_tbl <- ipums_vars |>
-  # only include necessary variables
-  filter(var_name %in% c('ownershp', 'vacancy', "gq")) |>
-  # remove other columns
-  select(var_name, val_labels) |>
-  # unnest labels from nested columns
-  unnest(val_labels) |>
-  # group by var_name for generating row numbers to unpivot without lists
-  group_by(var_name) |>
-  # add row_numbers
-  mutate(row = row_number()) |>
-  ungroup() |>
-  # pivot wider to generate table
-  pivot_wider(
-    names_from = var_name,
-    values_from = c(val, lbl),
-    # specify order of variable then val/lbl column
-    names_glue = "{var_name}_{.value}",
-    # use slowest so variables are grouped together
-    names_vary = "slowest"
-  ) |>
-  # remove row index as no longer necessary
-  select(-row) |>
-  # move gq to end
-  relocate(starts_with("gq"), .after = last_col())
-
-# create GT table with information
-ipums_var_tbl_gt <- ipums_var_tbl |>
-  gt() |>
-  # create spanners based on the column separators defined above
-  tab_spanner_delim(delim = "_") |>
-  # Replace NA values with empty strings
-  sub_missing(
-    missing_text = ""
-  )
-```
-
-```{r}
-#| label: tbl-pums-vars
-#| tbl-cap: "Values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables."
-
-# display table
-ipums_var_tbl_gt
-
-```
-
-@tbl-pums-vars includes the values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables.
-
-The N/A labels associated with `val=0` for the `ownershp` and `vacancy` variables is reflective of units which are Vacant, or Occupied, respectively.
-
-Given these values we then need to establish filtering parameters for determining vacancy rates.
-
-1.  `gq <= 2 OR gq ==5` filter out gq units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
-2.  `vacancy <= 2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
-3.  Leave Ownership as is.
-
-[^1]: Note to self - review these definitions to see if we want to exclude any of these groupings.
-
-In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters gq units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies `vacancy == 3` to `0` as occupied. Finally, `N/A` values are relabeled for each of the ownershp, and vacancy variables to reflect that these reflect Vacant and Occupied units, respectively.
-
-```{r}
-#| label: calc-vacancy
-
-# create survey design object
-acs_hh_data <- ipums_extract$HOUSEHOLD |>
-  # remove gq units and vacant units 4-6
-  filter(
-    gq %in% c(0, 1, 2, 5) & !(vacancy %in% c(4:6, 7, 9))
-  )
-# reclassify 3 to 0 and 4-6 to 3
-# mutate(
-#   vacancy = lbl_relabel(
-#     vacancy,
-#     0 ~ .val == 3
-#   ),
-#   ownershp = lbl_relabel(
-#     ownershp,
-#     lbl(0, "Vacant") ~ .val == 0
-#   )
-# # ) |>
-# as_factor(levels = "values") |>
-# as_duckplyr_tibble()
-
-acs_hh_srvy <- acs_hh_data |>
-  as_survey_design(
-    weight = hhwt,
-    repweights = matches("repwt[0-9]+"),
-    type = "ACS",
-    mse = TRUE
-  )
-
-```
-
-Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as \$ \sum VACANT\_{ot} \over {\\\\\\\\sum VACANT\\\\\\\_{ot}+ \\\\\\\\sum OCCUPIED\\\\\\\_{ot}}\$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
-
-[^2]: For this purpose we make the assumption that `vacancy == 1` (For rent or sale) is for Rent, and `vacancy ==2` (For sale only) is for sale in order to the simplify the analysis.
-
-[^3]: Note to self - verify that margin of error are additive
-
-Once the vacancy rates are calculated, we then calculate the average vacancy rate for each year. To get an annual shortfall we then take the difference between the average vacancy rate and the current vacancy rate. Applying this difference to the total number of units for each year gives us the annual shortfall.
-
-In combining vacancy rates a `tenure` variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value `rent` for `OWNSHP == 2` and `vacancy == 1`, and `own` for `OWNSHP == 1` and `vacancy == 2`; consistent with the classifications determined above.
-
-```{r}
-#| label: calc-nahb-vacancy
-
-# calculate vacancy
-acs_vacancy <- acs_hh_srvy |>
-  group_by(vacancy, year) |>
-  survey_count(vacancy, name = "vac") |>
-  mutate(
-    vac_moe = vac_se * 1.645,
-    tenure = case_when(
-      vacancy == 1 ~ "rent",
-      vacancy == 2 ~ "own"
-    )
-  ) |>
-  filter(!is.na(tenure)) |>
-  ungroup()
-
-# calculate occupied
-acs_occupancy <- acs_hh_srvy |>
-  group_by(ownershp, year) |>
-  survey_count(ownershp, name = "occ") |>
-  mutate(
-    occ_moe = occ_se * 1.645,
-    tenure = case_when(
-      ownershp == 1 ~ "own",
-      ownershp == 2 ~ "rent"
-    )
-  ) |>
-  filter(!is.na(tenure)) |>
-  ungroup()
-
-# calculate total occupied and total vacant
-acs_combined_ov <- acs_vacancy |>
-  select(year, tenure, vac, vac_moe) |>
-  left_join(
-    acs_occupancy |>
-      select(year, tenure, occ, occ_moe),
-    by = c("year", "tenure")
-  ) %>% # old style pipe needs to be used to pipe . into bind_rows
-  bind_rows(
-    summarize(
-      .,
-      tenure = "total",
-      across(c(vac:occ_moe), sum),
-      .by = year
-    )
-  ) |>
-  mutate(
-    total = vac + occ,
-    vac_rate = vac / total
-  ) |>
-  group_by(tenure) |>
-  mutate(avg_vac_rate = mean(vac_rate)) |>
-  ungroup() |>
-  mutate(
-    diff_from_avg = avg_vac_rate - vac_rate,
-    shortfall = diff_from_avg * total
-  )
-
-current_shortfall <- acs_combined_ov |>
-  filter(year == 2023) |>
-  select(-year) |>
-  mutate(tenure = str_to_title(tenure)) |>
-  gt() |>
-  fmt_number(c(vac:total, shortfall), decimals = 0) |>
-  fmt_percent(c(vac_rate:diff_from_avg)) |>
-  cols_label(
-    tenure = "Tenure",
-    vac = "Vacant",
-    vac_moe = "Margin of Error",
-    occ = "Occupied",
-    occ_moe = "Margin of Error",
-    total = "Total",
-    vac_rate = "vacancy Rate",
-    avg_vac_rate = "Average vacancy Rate",
-    diff_from_avg = "Difference from Average",
-    shortfall = "Shortfall"
-  ) |>
-  cols_align("center")
-
-```
-
-```{r}
-#| label: tbl-nahb-shortfall
-#| tbl-cap: "Current shortfall of occupied housing units by tenure type using NAHB Methodology."
-
-current_shortfall
-
-# define get_shortfall function to return shortfall based on tenure and format data
-extract_shortfall <- function(ten_type) {
-  current_shortfall |>
-    fmt_number(decimals = 1, suffixing = "K") |>
-    extract_cells(shortfall, rows = tenure == ten_type)
-}
-
-
-```
-
-@tbl-nahb-shortfall contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of `r extract_shortfall("Rent")` units for rent and `r extract_shortfall("Own")` units for ownership are determined, for a total shortfall of `r extract_shortfall("Total")`[^4].
-
-[^4]: Note: the Total shortfall is less than the sum of the own and vacant shortfalls due to differences as vacancy rates are determined by tenure.
-
-### Freddie Mac
+::: {.callout-note}
+Neal - I will need you to elaborate some on this - especially in the context of the analysis
+:::
 
 Freddie Mac determines the Target Housing Stock `k*` as a function of target number of households `hh*`, and target vacancy rate `v*`, as provided in [@eq-freddie-mac-housing-units; @khater2021].
 
@@ -594,166 +389,211 @@ acs_headship_rates |>
   )
 ```
 
-#### Freddie Mac SDO age Groups
 
-As a follow up we compare the ACS estimates from implied estimates using SDO data from 2010 on, based on the Household Projections created by SDO. Both household and population by age data data is pulled from the SDO Postgres using tables `estimates.household_projections` and `county_census_grouping_ya_region`.
+Vacancy rates are calculated based on both the `ownershp` and `vacancy` variables. Additionally the `gq` variable is used to filter out group quarters.
+
+In order to calculate vacancy rates it is necessary to first understand what each of the values for each variable represents
 
 ```{r}
-#| label: connect_pg_sdo
+#| label: ipums_variable_labels
 
-library(DBI)
-library(RPostgres)
-# initiate connection to SDO postgres
-sdo_postgres <- dbConnect(
-  RPostgres::Postgres(),
-  dbname = 'dola',
-  host = '104.197.26.248',
-  port = 5433,
-  user = Sys.getenv("SDO_USER_R"), #environment variable with read only user needs to be saved
-  password = Sys.getenv("SDO_PW_R"), #environment variable with read only pw needs to be saved
-  bigint = 'integer64'
-)
+# generate table with variable information
+# table will include columns {VAR}_val, and {VAR}_lbl with the value and
+# label for each variable. This is setup so tab_spanner_delim can be used to
+# separate out columns in a GT table
+ipums_var_tbl <- ipums_vars |>
+  # only include necessary variables
+  filter(var_name %in% c('ownershp', 'vacancy', "gq")) |>
+  # remove other columns
+  select(var_name, val_labels) |>
+  # unnest labels from nested columns
+  unnest(val_labels) |>
+  # group by var_name for generating row numbers to unpivot without lists
+  group_by(var_name) |>
+  # add row_numbers
+  mutate(row = row_number()) |>
+  ungroup() |>
+  # pivot wider to generate table
+  pivot_wider(
+    names_from = var_name,
+    values_from = c(val, lbl),
+    # specify order of variable then val/lbl column
+    names_glue = "{var_name}_{.value}",
+    # use slowest so variables are grouped together
+    names_vary = "slowest"
+  ) |>
+  # remove row index as no longer necessary
+  select(-row) |>
+  # move gq to end
+  relocate(starts_with("gq"), .after = last_col())
 
-connections::connection_view(sdo_postgres)
-
+# create GT table with information
+ipums_var_tbl_gt <- ipums_var_tbl |>
+  gt() |>
+  # create spanners based on the column separators defined above
+  tab_spanner_delim(delim = "_") |>
+  # Replace NA values with empty strings
+  sub_missing(
+    missing_text = ""
+  )
 ```
 
 ```{r}
-#| label: calc_sdo_hr
+#| label: tbl-pums-vars
+#| tbl-cap: "Values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables."
 
-sdo_hh_proj <- tbl(
-  sdo_postgres,
-  Id(
-    schema = "estimates",
-    table = "household_projections"
-  )
-) |>
-  filter(area_code == 0 & household_type_id == 0) |>
-  select(
-    area_code,
-    year,
-    age_group_id,
-    age_group = age_group_description,
-    hh = total_households
-  )
+# display table
+ipums_var_tbl_gt
 
-sdo_pop <- tbl(
-  sdo_postgres,
-  Id(
-    schema = "estimates",
-    table = "county_sya"
-  )
-) |>
-  select(area_code = countyfips, year, age, totalpopulation) |>
-  filter(area_code == 0 & age >= 18) |>
+```
+
+@tbl-pums-vars includes the values and respective labels for each of the `ownershp`, `vacancy`, and `gq` variables.
+
+The N/A labels associated with `val=0` for the `ownershp` and `vacancy` variables is reflective of units which are Vacant, or Occupied, respectively.
+
+Given these values we then need to establish filtering parameters for determining vacancy rates.
+
+1.  `gq <= 2 OR gq ==5` filter out gq units to only included Households and Vacant Units (including with the 1990 and 2000 Additional Unit definitions)[^1].
+2.  `vacancy <= 2` Remove occasional/seasonal vacant units (4-6) consistent with NAHB analysis. Remove migrant farm worker usage (7), and other vacant (9), as these should be relatively independent of overall vacancy rates. Reclassify `3` - Rented or sold but not (yet) occupied to `0` as occupied.
+3.  Leave Ownership as is.
+
+[^1]: Note to self - review these definitions to see if we want to exclude any of these groupings.
+
+In order to broadly analyze survey data, and additionally calculate margin of error, the `srvyr` package is used. Prior to analysis a survey object must be defined based on the extracted ACS data. This survey object filters gq units based on condition 1 above, and removes vacant units based on condition 2 above. Additionally, it reclassifies `vacancy == 3` to `0` as occupied. Finally, `N/A` values are relabeled for each of the ownershp, and vacancy variables to reflect that these reflect Vacant and Occupied units, respectively.
+
+```{r}
+#| label: calc-vacancy
+
+# create survey design object
+acs_hh_data <- ipums_extract$HOUSEHOLD |>
+  # remove gq units and vacant units 4-6
+  filter(
+    gq %in% c(0, 1, 2, 5) & !(vacancy %in% c(4:6, 7, 9))
+  ) |>
+  # reclassify 3 to 0 and 4-6 to 3
   mutate(
-    age_group_id = as.integer(cut(
-      age,
-      breaks = c(18, 24, 44, 64, Inf),
-      labels = FALSE,
-      include.lowest = TRUE
-    ))
-  ) |>
-  summarize(
-    pop = sum(totalpopulation),
-    .by = c(area_code, year, age_group_id)
-  ) |>
-  collect()
-
-sdo_pop <- sdo_pop |>
-  bind_rows(
-    sdo_pop |>
-      summarize(
-        age_group_id = 0,
-        pop = sum(pop),
-        .by = c(area_code, year)
-      )
+    vacancy = if_else(vacancy == 3, 0, vacancy)
   )
 
-sdo_combined <- sdo_hh_proj |>
-  collect() |>
+acs_hh_srvy <- acs_hh_data |>
+  as_survey_design(
+    weight = hhwt,
+    repweights = matches("repwt[0-9]+"),
+    type = "ACS",
+    mse = TRUE
+  )
+
+```
+
+Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2][^3]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $\sum vacant_{ot} \over {\sum vacant_{ot}+ \sum occupied_{ot}}$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^4].
+
+[^2]: For this purpose we make the assumption that `vacancy == 1` (For rent or sale) is for Rent, and `vacancy ==2` (For sale only) is for sale in order to the simplify the analysis.
+
+[^3]: Margin of error are calculated as 1.645 \* standard error consistent with 90% CI\
+
+[^4]: Note: the Total shortfall is less than the sum of the own and vacant shortfalls due to differences as vacancy rates are determined by tenure.
+
+Once the vacancy rates are calculated, we then calculate the average vacancy rate for each year. To get an annual shortfall we then take the difference between the average vacancy rate and the current vacancy rate. Applying this difference to the total number of units for each year gives us the annual shortfall.
+
+In combining vacancy rates a `tenure` variable is created to determine if a unit is determined to be sale or rental for the purpose of calculating vacancy rates. This is set equal to the value `rent` for `ownershp == 2` and `vacancy == 1`, and `own` for `ownershp== 1` and `vacancy == 2`; consistent with the classifications determined above.
+
+```{r}
+#| label: calc-nahb-vacancy
+
+# calculate vacancy
+acs_vacancy <- acs_hh_srvy |>
+  group_by(vacancy, year) |>
+  survey_count(vacancy, name = "vac") |>
+  mutate(
+    vac_moe = vac_se * 1.645,
+    tenure = case_when(
+      vacancy == 1 ~ "rent",
+      vacancy == 2 ~ "own"
+    )
+  ) |>
+  filter(!is.na(tenure)) |>
+  ungroup()
+
+# calculate occupied
+acs_occupancy <- acs_hh_srvy |>
+  group_by(ownershp, year) |>
+  survey_count(ownershp, name = "occ") |>
+  mutate(
+    occ_moe = occ_se * 1.645,
+    tenure = case_when(
+      ownershp == 1 ~ "own",
+      ownershp == 2 ~ "rent"
+    )
+  ) |>
+  filter(!is.na(tenure)) |>
+  ungroup()
+
+# calculate total occupied and total vacant
+acs_combined_ov <- acs_vacancy |>
+  select(year, tenure, vac, vac_moe) |>
   left_join(
-    sdo_pop,
-    by = join_by(area_code, year, age_group_id)
-  ) |>
-  mutate(
-    headship_rate = hh / pop
-  ) |>
-  arrange(area_code, year, age_group_id)
-```
-
-Next we recalculate the ACS data using SDO age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
-
-```{r}
-#| label: calc_hr_acs_sdo
-
-acs_hr_tot_persons_sdo <- acs_hr_srvy |>
-  survey_count(year, age_group_id, name = "pop") |>
+    acs_occupancy |>
+      select(year, tenure, occ, occ_moe),
+    by = c("year", "tenure")
+  ) %>% # old style pipe needs to be used to pipe . into bind_rows
   bind_rows(
-    acs_hr_srvy |>
-      survey_count(year, name = "pop") |>
-      mutate(age_group_id = 0, .after = year)
+    summarize(
+      .,
+      tenure = "total",
+      across(c(vac:occ_moe), sum),
+      .by = year
+    )
   ) |>
-  arrange(year, age_group_id)
-
-acs_hr_hh_heads_sdo <- acs_hr_srvy |>
-  filter(pernum == 1) |>
-  survey_count(year, age_group_id, name = "hh") |>
-  bind_rows(
-    acs_hr_srvy |>
-      filter(pernum == 1) |>
-      survey_count(year, name = "hh") |>
-      mutate(age_group_id = 0, .after = year)
-  ) |>
-  arrange(year, age_group_id)
-
-acs_hr_sdo <- acs_hr_tot_persons_sdo |>
-  left_join(acs_hr_hh_heads_sdo) |>
-  filter(!is.na(age_group_id)) |>
   mutate(
-    headship_rate = hh / pop
+    total = vac + occ,
+    vac_rate = vac / total
   ) |>
-  rename(year = year)
-
-acs_sdo_combined <- acs_hr_sdo |>
-  full_join(
-    sdo_combined,
-    suffix = c("_acs", "_sdo"),
-    by = join_by(year, age_group_id)
-  ) |>
-  arrange(year, age_group_id) |>
+  group_by(tenure) |>
+  mutate(avg_vac_rate = mean(vac_rate)) |>
+  ungroup() |>
   mutate(
-    pop_diff = pop_acs - pop_sdo,
-    check_pop = if_else(abs(pop_diff) <= pop_se, TRUE, FALSE)
-  ) |>
-  select(
-    year,
-    age_group_id,
-    age_group,
-    pop_acs,
-    pop_se,
-    pop_sdo,
-    pop_diff,
-    check_pop,
-    hh_acs,
-    hh_se,
-    headship_rate_acs,
-    headship_rate_sdo
+    diff_from_avg = avg_vac_rate - vac_rate,
+    shortfall = diff_from_avg * total
   )
 
-write_csv(acs_sdo_comparison, "acs_sdo_comparison.csv")
+current_shortfall <- acs_combined_ov |>
+  filter(year == 2023) |>
+  select(-year) |>
+  mutate(tenure = str_to_title(tenure)) |>
+  gt() |>
+  fmt_number(c(vac:total, shortfall), decimals = 0) |>
+  fmt_percent(c(vac_rate:diff_from_avg)) |>
+  cols_label(
+    tenure = "Tenure",
+    vac = "Vacant",
+    vac_moe = "Margin of Error",
+    occ = "Occupied",
+    occ_moe = "Margin of Error",
+    total = "Total",
+    vac_rate = "vacancy Rate",
+    avg_vac_rate = "Average vacancy Rate",
+    diff_from_avg = "Difference from Average",
+    shortfall = "Shortfall"
+  ) |>
+  cols_align("center")
+
 ```
 
-### National Association of Realtors
+```{r}
+#| label: tbl-nahb-shortfall
+#| tbl-cap: "Current shortfall of occupied housing units by tenure type using NAHB Methodology."
 
-This uses the decline in building rates during the 2000s relative to the long term averages between 1968 and 2000 to determine the shortfall in housing from the supply side. This method was not recreated due to the inherent underlying assumptions. In particular, growth rates are not necessarily linear over time, and this is particularly the case with rapidly growing states. Colorado in particular was undergoing rapid urbanization and it is not necessarily safe to assume that growth of this style would continue.
+current_shortfall
 
-### National Low Income Housing Coalitition (NLIHC)
+# define get_shortfall function to return shortfall based on tenure and format data
+extract_shortfall <- function(ten_type) {
+  current_shortfall |>
+    fmt_number(decimals = 1, suffixing = "K") |>
+    extract_cells(shortfall, rows = tenure == ten_type)
+}
 
-This calculates the housing gap based on the difference between households by AMI (extremely low-income, very low-income, low-income, middle-income, or above median income), based on the applicable HUD AMI. Housing Units were separately categorized into income necessary to rent them, based on spending more than 30% of their income on housing costs (regardless of the actual income of the household occupying that housing unit). Finally they examined the extent to which households in each AMI group resided in a unit which was affordable to that household. [@thegap2024]
+```
 
-While this methodology is similar to the method SDO is currently working as part of its Housing Needs Assessments there is no need to recreate the table directly, as NLIHC provides state level results for all states, including [Colorado](https://nlihc.org/gap/state/co), based on 2022 ACS data.
+@tbl-nahb-shortfall contains the calculated shortfall for 2023 using the NAHB methodology. Using this methodology shortfalls of `r extract_shortfall("Rent")` units for rent and `r extract_shortfall("Own")` units for ownership are determined, for a total shortfall of `r extract_shortfall("Total")`[^5].
 
-Based on their methodology NLIHC finds Colorado to be short 119,782 housing units at the Extremely Low Income (0 to 30% of Area Median Income), and 165,053 units for households at or below 50% AMI (including those who were classified as Extremely Low Income. While statewide they find that there are 101 Affordable and Available Rental Units per 100 Households for those At or Below 100% AMI, there are only 27 and 44 units Affordable and Available to those at or below the 30% and 50% AMI levels, respectively. Similarly they find that for households which are in the 0-30%, and 31-50% AMI bands, 88% and 83% units, respectively are Cost Burdened, while only 22% of units between 81 and 100% AMI are. [@gaprepo]
-
-One important footnote to the NLIHC study, however, is that the units identified are not necessarily new housing units which must be built. Rather they indicate households that may reside in housing units already, but for which the cost may be unaffordable. This distinction is important because the housing already exists, and the objective then is to determine a method for making these units affordable to these families, which can occur in different ways, including by subsidizing rents for residents to bridge the gap between 30% of their income and the market rent being charged on their unit. Additionally, because housing prices are determined on the margins, each additional housing unit in theory pushes down housing prices by some incremental amount, holding demand equal. Therefore the number of units necessary to push prices down to a level which becomes affordable to residents at these costs is not necessarily equal to the total number of households experience affordability problems, and, in fact, may be significantly higher or lower depending on these effects and the manner to which lower rents filter down through the housing stock.
+[^5]: Note: the Total shortfall is less than the sum of the own and vacant shortfalls due to differences as vacancy rates are determined by tenure.
