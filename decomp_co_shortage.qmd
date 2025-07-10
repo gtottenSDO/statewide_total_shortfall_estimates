@@ -123,7 +123,11 @@ CO_SEASONAL_HOUSING <- housing_df |>
 CO_UNIHABITABLE_HOUSING <- housing_df |>
   filter(UNIHABITABLE) |>
   count(YEAR, wt = HHWT) |>
+  bind_rows(tibble(YEAR = c(2000:2019), n = rep(0, 20))) |> #add in years with no data to allow for analysis later
+  arrange(YEAR) |>
   pull(n, name = "YEAR")
+
+
 ```
 
 Using these definitions we find that Colorado has `r prettyNum(CO_SEASONAL_HOUSING, big.mark = ",")` seasonal housing units and `r prettyNum(CO_UNIHABITABLE_HOUSING, big.mark = ",")` uninhabitable housing units. The table below shows how the distribution of these housing types differs between Colorado and the US as a whole. We can see that relative to the US, Colorado has more 2nd and vacation house, but less uninhabitable housing.
@@ -191,7 +195,8 @@ VACANCY_RATE <- .05
 
 CO_HOUSEHOLDS <- housing_df |>
   filter(STATEFIP == 8 & VACANCY == 0) |>
-  count(YEAR, wt = HHWT)
+  count(YEAR, wt = HHWT) |>
+  pull(n, name = "YEAR")
 ```
 
 We arrive at an estimate of `r prettyNum(CO_HOUSEHOLDS, big.mark = ",")` households in Colorado.
@@ -510,6 +515,202 @@ CO_UNDERPOD_DECOMP <- (sum(target_hh_df$MISSINGHH) + CO_HOUSEHOLDS) /
   (CO_HOUSING_UNITS - CO_SEASONAL_HOUSING - CO_UNIHABITABLE_HOUSING)
 ```
 
+``` {r}
+# convert prior analysis to function for passing multiple baseline and/or analysis years
+calc_decomp <- function(analysis_year = 2023, baseline_year = 2000) {
+  superset_df <- hh_df |>
+    filter(YEAR %in% c(analysis_year, baseline_year)) |>
+    filter(AGE >= minimum_age & AGE <= maximum_age) |>
+    filter(STATEFIP == 8) |>
+    mutate(MARRIED = MARST %in% c(1, 2)) |>
+    mutate(LABFORCE = LABFORCE == 2) |>
+    mutate(HSEDU = EDUC >= 6 & EDUC < 10) |>
+    mutate(COLEDU = EDUC >= 10) |>
+    mutate(TRIGEN = MULTGEN > 2) |>
+    select(
+      YEAR,
+      HEADSHIP,
+      PERWT,
+      AGEGROUP,
+      HOUSINGCOST,
+      NCHILD,
+      MARRIED,
+      LABFORCE,
+      INCTOT,
+      HSEDU,
+      COLEDU,
+      TRIGEN,
+      HCOSTRATIO
+    )
+
+  fm_anlyz_df <- superset_df |>
+    # remove individuals who dont make sense to analysis
+    filter(PERWT != 0, YEAR == analysis_year) |>
+    mutate(HEADSHIP = as.integer(HEADSHIP))
+
+  design_anlyz_df <- svydesign(ids = ~1, weights = ~PERWT, data = fm_anlyz_df)
+
+  cf_houscost_df <- superset_df |>
+    # remove individuals who dont make sense to analysis
+    filter(PERWT != 0, YEAR == baseline_year) |>
+    group_by(AGEGROUP) |>
+    summarize(
+      HCOSTRATIO = weighted.median(HCOSTRATIO, PERWT, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    right_join(
+      superset_df |>
+        filter(YEAR == analysis_year) |>
+        select(-HCOSTRATIO),
+      by = "AGEGROUP"
+    )
+
+  design_anlyz_df <- svydesign(ids = ~1, weights = ~PERWT, data = fm_anlyz_df)
+
+  model_list <- list(
+    age_lm = svyglm(
+      HEADSHIP ~ AGEGROUP,
+      design = design_anlyz_df,
+      family = binomial
+    ),
+    base_lm = svyglm(
+      HEADSHIP ~ log(HCOSTRATIO) * AGEGROUP,
+      design = design_anlyz_df,
+      family = binomial
+    ),
+    famcomp_lm = svyglm(
+      HEADSHIP ~ (log(HCOSTRATIO) + MARRIED + NCHILD + TRIGEN) * AGEGROUP,
+      design = design_anlyz_df,
+      family = binomial
+    ),
+    incedu_lm = svyglm(
+      HEADSHIP ~ (log(HCOSTRATIO) + LABFORCE + HSEDU + COLEDU) * AGEGROUP,
+      design = design_anlyz_df,
+      family = binomial
+    ),
+    full_lm = svyglm(
+      HEADSHIP ~
+        (log(HCOSTRATIO) +
+          MARRIED +
+          NCHILD +
+          TRIGEN +
+          LABFORCE +
+          HSEDU +
+          COLEDU) *
+          AGEGROUP,
+      design = design_anlyz_df,
+      family = binomial
+    )
+  )
+
+  model_pred_df <- bind_rows(lapply(names(model_list), function(ln) {
+    cf_houscost_df |>
+      mutate(
+        NEWHR = as.vector(predict(
+          model_list[[ln]],
+          newdata = cf_houscost_df,
+          type = "response"
+        ))
+      ) |>
+      mutate(MODEL = ln)
+  }))
+
+  target_hh_df <- hh_df |>
+    filter(YEAR == analysis_year & PERWT != 0) |>
+    filter(AGE >= 15 & AGE <= maximum_age) |>
+    filter(STATEFIP == 8) |>
+    group_by(AGEGROUP) |>
+    summarize(HH = sum(PERWT * HEADSHIP)) |>
+    left_join(
+      hh_df |>
+        filter(YEAR == analysis_year & PERWT != 0) |>
+        filter(AGE < minimum_age & AGE >= 15) |>
+        filter(STATEFIP == 8) |>
+        mutate(NEWHR = .04) |>
+        group_by(AGEGROUP) |>
+        summarize(NEWHH = sum(PERWT * NEWHR)) |>
+        bind_rows(
+          model_pred_df |>
+            filter(MODEL == "full_lm") |>
+            group_by(AGEGROUP) |>
+            summarize(NEWHH = sum(PERWT * NEWHR))
+        ),
+      by = join_by(AGEGROUP)
+    ) |>
+    mutate(
+      baseline_year = baseline_year,
+      analysis_year = analysis_year,
+      MISSINGHH = NEWHH - HH
+    ) |>
+    relocate(baseline_year, analysis_year, .before = 1)
+
+  CO_MISSING_HH_DECOMP <- tibble(
+    baseline_year = baseline_year,
+    analysis_year = analysis_year,
+    target_hh = sum(target_hh_df$NEWHH),
+    current_hh = sum(target_hh_df$HH),
+    missing_hh = sum(target_hh_df$MISSINGHH),
+    households = CO_HOUSEHOLDS[[as.character(analysis_year)]],
+    vacancy_rate = VACANCY_RATE,
+    housing_units = CO_HOUSING_UNITS[[as.character(analysis_year)]],
+    seasonal_housing = CO_SEASONAL_HOUSING[[as.character(analysis_year)]],
+    uninhabitable_housing = CO_UNIHABITABLE_HOUSING[[as.character(
+      analysis_year
+    )]],
+    underproduction = (missing_hh + households) /
+      (1 - vacancy_rate) -
+      (CO_HOUSING_UNITS[[as.character(analysis_year)]] -
+        CO_SEASONAL_HOUSING[[as.character(analysis_year)]] -
+        CO_UNIHABITABLE_HOUSING[[as.character(analysis_year)]])
+  )
+
+  outputs <- list(
+    missing_hh = CO_MISSING_HH_DECOMP,
+    by_age = target_hh_df
+  )
+
+  return(outputs)
+}
+
+```
+
+``` {r}
+# run for all analysis years
+co_missing_decomp_all <- map(
+  c(2000:2023),
+  ~ calc_decomp(analysis_year = ., baseline_year = 2000)
+) |>
+  set_names(c(2000:2023))
+
+calc_decomp(analysis_year = 2000, baseline_year = 2000)
+```
+
+```{r}
+co_missing_df <- co_missing_decomp_all |>
+  bind_rows()
+
+write_csv(
+  co_missing_df$missing_hh |>
+    distinct() |>
+    pivot_longer(
+      cols = c(
+        target_hh,
+        current_hh,
+        missing_hh,
+        households,
+        vacancy_rate,
+        housing_units,
+        seasonal_housing,
+        uninhabitable_housing,
+        underproduction
+      ),
+      names_to = "variable",
+      values_to = "value"
+    ),
+  "data/co_missing_hh.csv"
+)
+```
+
 From these calculations we find that Colorado has `r prettyNum(round(CO_MISSING_HH ), big.mark = ",")` missing households which leads to a housing underproduction count of `r prettyNum(round(CO_UNDERPOD), big.mark = ",")` units.
 
 To demonstrate in another way what this model is doing and show its flexibility lets pick another value for housing burden to see its impact on the housing shortage estimate. Let us say instead that we think all individuals should be paying 100% of their income on housing costs. We can place this into the model as follows.
@@ -555,7 +756,7 @@ cf_ten_income <- hh_df |>
   right_join(
     superset_df |>
       filter(YEAR == analysis_year) |>
-      mutate(HCOSTRATIO = .1) |>
+      mutate(HCOSTRATIO = .1) %>%
       mutate(
         NEWHR = predict(
           model_list[["full_lm"]],
