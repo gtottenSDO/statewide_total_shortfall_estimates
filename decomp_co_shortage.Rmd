@@ -1,11 +1,13 @@
 ---
 title: "Colorado Housing Shortage"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 date: "2025-04-28"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## Colorado and Housing Shortages  

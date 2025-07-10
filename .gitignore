@@ -7,3 +7,4 @@
 data/ipums_raw/usa_00081.dat.gz
 /index_cache/
 desktop.ini
+data/ipums_raw/*.dat.gz
