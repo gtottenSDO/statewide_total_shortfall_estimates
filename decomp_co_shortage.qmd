@@ -47,6 +47,7 @@ library(tidyverse)
 library(ipumsr)
 library(survey)
 library(spatstat.univar)
+library(duckplyr)
 
 housing_df <- read_ipums_micro("./data/ipums_raw/usa_00064.xml") %>%
   # need to remove group quarters
@@ -166,9 +167,11 @@ cpi_df <- "data/CPIAUCSL.csv" %>%
   mutate(adj_factor = first(cpi[YEAR == 2023])/cpi)
 
 hh_df <- read_ipums_micro("./data/ipums_raw/usa_00063.xml") %>%
+  ipumsr::zap_ipums_attributes() |> 
+  as_duckdb_tibble() |>
     # we want to filter out the group quarter population and say that
     # their impact on the housing market is exogenous to other factors
-    filter(GQ %in% c(0,1,2,5)) %>%
+    filter(GQ %in% c(0,1,2,5) & YEAR == 2000) %>%
     # recode missing codes to either missing or zero
     mutate(HHINCOME = if_else(HHINCOME == 9999999, 0, HHINCOME)) %>%
     mutate(OWNCOST = if_else(OWNCOST == 99999, 0, OWNCOST)) %>%
@@ -211,21 +214,32 @@ hh_df <- read_ipums_micro("./data/ipums_raw/usa_00063.xml") %>%
 Looking at the table above we see that almost every age group has a lower headship rate in 2023 compared to 2020. We can plug in these values for $\text{HR}^*$ to finish the last piece of the puzzle in calculating housing underproduction. 
 
 ```{r}
-analysis_year <- 2023
-baseline_year <- 2000
+analysis_year <- 2000
+baseline_year <- 9999
 minimum_age <- 20
 maximum_age <- 199
 ```
 
+```{r}
+hh_99 <- hh_df |> 
+    filter(YEAR == 2000) |> 
+    mutate(YEAR = 9999)
+
+
+hh_df <- bind_rows(hh_df, hh_99)
+```
 
 ```{r}
+hh_df <- as_duckdb_tibble(hh_df |> 
+  ))
+
 simple_target_hh_df <- hh_df %>%
-  filter(STATEFIP == 8, AGE >= 15, YEAR == 2000) %>%
+  filter(STATEFIP == 8, AGE >= 15, YEAR == baseline_year) %>%
   group_by(AGEGROUP) %>%
   summarise(NEWHH = weighted.mean(HEADSHIP, PERWT), .groups = "drop") %>%
   right_join(
     hh_df %>%
-      filter(STATEFIP == 8, AGE >= 15, YEAR == 2023),
+      filter(STATEFIP == 8, AGE >= 15, YEAR == analysis_year),
     by = "AGEGROUP"
   ) %>%
   group_by(AGEGROUP) %>%
@@ -254,7 +268,7 @@ In addition to this abnormality, the use of a past headship rate is somewhat uns
 
 ```{r}
 hh_df %>%
-  filter(YEAR == 2000 | YEAR == 2023) %>%
+  filter(YEAR == baseline_year | YEAR == analysis_year) %>%
   filter(RELATE == 1 & STATEFIP == 8) %>%
   mutate(HCOSTQ = cut(
     HCOSTRATIO, c(0, .35, .60, Inf), labels = c("0-35%", "35-60%", ">60%"))) %>%
@@ -288,7 +302,12 @@ Note for the counter factual that this change is equivalent to adding the endowm
 
 
 ```{r}
-superset_df <- hh_df %>%
+
+
+superset_df <- bind_rows(
+    hh_df,
+    hh_99
+    ) %>%
   filter(YEAR %in% c(analysis_year, baseline_year)) %>%
   filter(AGE >= minimum_age & AGE <= maximum_age) %>%
   filter(STATEFIP == 8) %>%
