@@ -281,23 +281,33 @@ hh_df |>
 Looking at the table above we see that almost every age group has a lower headship rate in 2023 compared to 2020. We can plug in these values for $\text{HR}^*$ to finish the last piece of the puzzle in calculating housing underproduction.
 
 ```{r}
-analysis_year <- 2023
+analysis_year <- 2021
 baseline_year <- 2000
-minimum_age <- 20
-maximum_age <- 199
+minimum_age <- 18
+maximum_age <- 45
 ```
 
 ```{r}
 simple_target_hh_df <- hh_df |>
-  filter(STATEFIP == 8, AGE >= 15, YEAR == baseline_year) |>
-  group_by(AGEGROUP) |>
+  filter(
+    STATEFIP == 8,
+    AGE >= minimum_age,
+    AGE < maximum_age,
+    YEAR == baseline_year
+  ) |>
+  group_by(AGEGROUP, CPUMA0010) |>
   summarise(NEWHH = weighted.mean(HEADSHIP, PERWT), .groups = "drop") |>
   right_join(
     hh_df |>
-      filter(STATEFIP == 8, AGE >= 15, YEAR == analysis_year),
-    by = "AGEGROUP"
+      filter(
+        STATEFIP == 8,
+        AGE >= minimum_age,
+        AGE < maximum_age,
+        YEAR == analysis_year
+      ),
+    by = join_by("AGEGROUP", "CPUMA0010")
   ) |>
-  group_by(AGEGROUP) |>
+  group_by(AGEGROUP, CPUMA0010) |>
   summarise(
     NEWHH = sum(NEWHH * PERWT),
     HH = sum(HEADSHIP * PERWT),
@@ -305,13 +315,22 @@ simple_target_hh_df <- hh_df |>
   ) |>
   mutate(MISSINGHH = NEWHH - HH)
 
-SIMPLE_MISSING_HH <- sum(simple_target_hh_df$MISSINGHH)
+SIMPLE_MISSING_HH <- simple_target_hh_df |>
+  filter(MISSINGHH > 0) |>
+  pull(MISSINGHH) |>
+  sum()
 
-SIMPLE_UNDERPOD <- (sum(simple_target_hh_df$NEWHH)) /
+# SIMPLE_UNDERPOD <- (sum(simple_target_hh_df$NEWHH)) /
+#   (1 - VACANCY_RATE) -
+#   (CO_HOUSING_UNITS[[as.character(analysis_year)]] -
+#     CO_SEASONAL_HOUSING[[as.character(analysis_year)]] -
+#     CO_UNIHABITABLE_HOUSING[[as.character(analysis_year)]])
+
+SIMPLE_UNDERPROD <- (SIMPLE_MISSING_HH +
+  CO_HOUSING_UNITS[[as.character(analysis_year)]]) /
   (1 - VACANCY_RATE) -
-  (CO_HOUSING_UNITS[[as.character(analysis_year)]] -
-    CO_SEASONAL_HOUSING[[as.character(analysis_year)]] -
-    CO_UNIHABITABLE_HOUSING[[as.character(analysis_year)]])
+  CO_HOUSING_UNITS[[as.character(analysis_year)]] -
+  CO_SEASONAL_HOUSING[[as.character(analysis_year)]]
 ```
 
 From these calculations we find that Colorado has `r prettyNum(round(SIMPLE_MISSING_HH ), big.mark = ",")` missing households which leads to a housing underproduction count of `r prettyNum(round(SIMPLE_UNDERPOD), big.mark = ",")` units. Note that this value is almost identical to the value published by the [Up for Growth 2023 analysis](https://upforgrowth.org/apply-the-vision/2023-housing-underproduction/), 101,000 units. This should be unsurprising given that we have followed their methodology almost exactly.

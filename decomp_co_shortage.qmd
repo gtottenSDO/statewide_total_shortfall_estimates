@@ -281,12 +281,19 @@ hh_df |>
   filter(YEAR == 2000, HEADSHIP) |>
   count(AGEGROUP, wt = HHWT) |>
   View()
+
+hh_df <- bind_rows(
+  hh_df,
+  hh_df |> 
+    filter(YEAR == 2000) |> 
+    mutate(YEAR == 9999)
+)
 ```
 
 Looking at the table above we see that almost every age group has a lower headship rate in 2023 compared to 2020. We can plug in these values for $\text{HR}^*$ to finish the last piece of the puzzle in calculating housing underproduction.
 
 ```{r}
-analysis_year <- 2023
+analysis_year <- 9999
 baseline_year <- 2000
 minimum_age <- 20
 maximum_age <- 199
