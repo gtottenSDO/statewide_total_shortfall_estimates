@@ -4,7 +4,6 @@
 .Ruserdata
 .Rproj
 /.quarto/
-data/ipums_raw/usa_00081.dat.gz
+data/ipums_raw/Data/archive/
 /index_cache/
 desktop.ini
-data/ipums_raw/*.dat.gz

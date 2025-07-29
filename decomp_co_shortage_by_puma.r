@@ -1,7 +1,7 @@
 library(tidyverse)
 library(ipumsr)
-library(survey)
-library(spatstat.univar)
+# library(survey)
+# library(spatstat.univar)
 library(duckplyr)
 
 # Get IPUMS variable lists from existing .xml files usa_00063.xml and usa_00064.xml
@@ -16,12 +16,14 @@ library(duckplyr)
 #   filter(var_name != "STATEFIP") |>
 #   pull(var_name) |>
 #   unique() |>
-#   as.list()
-
-# ipums_var_list[[length(ipums_var_list) + 1]] <- var_spec(
-#   name = "STATEFIP",
-#   case_selections = "08"
-# )
+#   append(list(
+#     "MET2013",
+#     "MET2013ERR",
+#     var_spec(
+#       name = "STATEFIP",
+#       case_selections = "08"
+#     )
+#   ))
 
 # # get list of samples for data
 # ipums_samples <- get_sample_info("usa") |>
@@ -48,9 +50,15 @@ library(duckplyr)
 #     download_dir = "./data/ipums_raw"
 #   )
 
-ipums_data <- read_ipums_micro_list("./data/ipums_raw/usa_00097.xml")
+ipums_data <- read_ipums_micro_list("./data/ipums_raw/usa_00099.xml")
 housing_df <- ipums_data$HOUSEHOLD |>
   zap_ipums_attributes() |>
+  # add metro names
+  left_join(
+    ipums_val_labels(ipums_data$HOUSEHOLD$MET2013) |>
+      rename(MET2013 = val) |>
+      rename(msa = lbl)
+  ) |>
   #remove rectype
   select(-RECTYPE) |>
   # need to remove group quarters
@@ -58,76 +66,34 @@ housing_df <- ipums_data$HOUSEHOLD |>
   # define seasonal housing
   mutate(SEASONAL = VACANCY == 4) |>
   # define uninhabitable housing
-  mutate(UNIHABITABLE = (KITCHEN == 1 | PLUMBING == 10) & VACDUR >= 7) |>
+  mutate(
+    UNIHABITABLE = (KITCHEN == 1 | PLUMBING == 10) &
+      if_else(is.na(VACDUR), VACANCY %in% c(1:3), VACDUR >= 7),
+    VACAVAIL = VACANCY %in% c(1:3)
+  ) |>
   # define Vacancy
   mutate(VACANT = VACANCY != 0)
 
 
 CO_HOUSING_UNITS <- housing_df |>
-  count(YEAR, wt = HHWT) |>
-  pull(n, name = "YEAR")
+  count(YEAR, msa, wt = HHWT, name = "housing_units")
 
 CO_SEASONAL_HOUSING <- housing_df |>
   filter(SEASONAL) |>
-  count(YEAR, wt = HHWT) |>
-  pull(n, name = "YEAR")
+  count(YEAR, msa, wt = HHWT, name = "housing_units_seasonal")
 
 CO_UNIHABITABLE_HOUSING <- housing_df |>
   filter(UNIHABITABLE) |>
-  count(YEAR, wt = HHWT) |>
-  pull(n, name = "YEAR")
+  count(YEAR, msa, wt = HHWT, name = "housing_units_uninhabitable")
 
-housing_df |>
-  mutate(
-    HOUSINGTYPE = case_when(
-      SEASONAL ~ "Seasonal",
-      UNIHABITABLE ~ "Uninhabitable",
-      TRUE ~ "Remaining"
-    )
-  ) |>
-  group_by(HOUSINGTYPE) |>
-  summarize(USHH = sum(HHWT), .groups = "drop") |>
-  mutate(USHH = str_c(sprintf("%.2f", USHH / sum(USHH) * 100), "%")) |>
-  left_join(
-    housing_df |>
-      filter(STATEFIP == 8) |>
-      mutate(
-        HOUSINGTYPE = case_when(
-          SEASONAL ~ "Seasonal",
-          UNIHABITABLE ~ "Uninhabitable",
-          TRUE ~ "Remaining"
-        )
-      ) |>
-      group_by(HOUSINGTYPE) |>
-      summarize(COHH = sum(HHWT), .groups = "drop") |>
-      mutate(COHH = str_c(sprintf("%.2f", COHH / sum(COHH) * 100), "%")),
-    by = "HOUSINGTYPE"
-  ) |>
-  rename(US = USHH, COLORADO = COHH)
+CO_VACANT_HOUSING <- housing_df |>
+  filter(VACAVAIL) |>
+  count(YEAR, msa, wt = HHWT, name = "housing_units_vacant")
 
-housing_df |>
-  filter(!(SEASONAL | UNIHABITABLE)) |>
-  mutate(HOUSINGTYPE = if_else(VACANT, "Vacant", "Occupied")) |>
-  group_by(HOUSINGTYPE) |>
-  summarize(USHH = sum(HHWT), .groups = "drop") |>
-  mutate(USHH = str_c(sprintf("%.2f", USHH / sum(USHH) * 100), "%")) |>
-  left_join(
-    housing_df |>
-      filter(STATEFIP == 8) |>
-      filter(!(SEASONAL | UNIHABITABLE)) |>
-      mutate(HOUSINGTYPE = if_else(VACANT, "Vacant", "Occupied")) |>
-      group_by(HOUSINGTYPE) |>
-      summarize(COHH = sum(HHWT), .groups = "drop") |>
-      mutate(COHH = str_c(sprintf("%.2f", COHH / sum(COHH) * 100), "%")),
-    by = "HOUSINGTYPE"
-  ) |>
-  rename(US = USHH, COLORADO = COHH)
-
-VACANCY_RATE <- .05
 
 CO_HOUSEHOLDS <- housing_df |>
   filter(STATEFIP == 8 & VACANCY == 0) |>
-  count(YEAR, wt = HHWT)
+  count(YEAR, msa, wt = HHWT)
 
 # this is our data frame we use for inflation adjusting calculations
 cpi_df <- "data/CPIAUCSL.csv" |>
@@ -196,306 +162,93 @@ co_hr_table <- hh_df |>
   summarise(HEADSHIP = weighted.mean(HEADSHIP, PERWT), .groups = "drop") |>
   pivot_wider(names_from = YEAR, values_from = HEADSHIP)
 
-hh_df |>
-  filter(YEAR == 2000, HEADSHIP) |>
-  count(AGEGROUP, wt = HHWT) |>
-  View()
-
 analysis_year <- 2021
 baseline_year <- 2000
 minimum_age <- 18
 maximum_age <- 45
+target_vacancy_rate <- .05
+
+hh_df <- hh_df |>
+  mutate(
+    age_dummy = (AGE >= minimum_age & AGE < maximum_age)
+  ) |>
+  relocate(msa, .after = MET2013)
 
 simple_target_hh_df <- hh_df |>
   filter(
     STATEFIP == 8,
-    AGE >= minimum_age,
-    AGE < maximum_age,
     YEAR == baseline_year
   ) |>
-  group_by(AGEGROUP, CPUMA0010) |>
-  summarise(NEWHH = weighted.mean(HEADSHIP, PERWT), .groups = "drop") |>
+  summarise(
+    NEWHH = weighted.mean(HEADSHIP, PERWT),
+    .by = c(msa, AGEGROUP, MET2013, age_dummy)
+  ) |>
   right_join(
     hh_df |>
       filter(
-        STATEFIP == 8,
-        AGE >= minimum_age,
-        AGE < maximum_age,
-        YEAR == analysis_year
+        STATEFIP == 8
       ),
-    by = join_by("AGEGROUP", "CPUMA0010")
+    by = join_by(msa, AGEGROUP, MET2013, age_dummy)
   ) |>
-  group_by(AGEGROUP, CPUMA0010) |>
   summarise(
-    NEWHH = sum(NEWHH * PERWT),
+    NEWHH_ = sum(NEWHH * PERWT),
     HH = sum(HEADSHIP * PERWT),
-    .groups = "drop"
+    .by = c(msa, AGEGROUP, MET2013, age_dummy, YEAR)
   ) |>
-  mutate(MISSINGHH = NEWHH - HH)
+  mutate(
+    NEWHH = if_else(
+      age_dummy & NEWHH_ > HH,
+      NEWHH_,
+      HH
+    ),
+    MISSINGHH = NEWHH - HH
+  ) |>
+  arrange(YEAR, msa, AGEGROUP)
 
-SIMPLE_MISSING_HH <- simple_target_hh_df |>
-  filter(MISSINGHH > 0) |>
-  pull(MISSINGHH) |>
-  sum()
 
-# SIMPLE_UNDERPOD <- (sum(simple_target_hh_df$NEWHH)) /
-#   (1 - VACANCY_RATE) -
-#   (CO_HOUSING_UNITS[[as.character(analysis_year)]] -
-#     CO_SEASONAL_HOUSING[[as.character(analysis_year)]] -
-#     CO_UNIHABITABLE_HOUSING[[as.character(analysis_year)]])
+metro_totals <- simple_target_hh_df |>
+  summarise(
+    HH = sum(HH),
+    NEWHH = sum(NEWHH),
+    MISSINGHH = sum(MISSINGHH),
+    .by = c(YEAR, msa)
+  ) |>
+  left_join(
+    CO_SEASONAL_HOUSING
+  ) |>
+  left_join(
+    CO_UNIHABITABLE_HOUSING
+  ) |>
+  left_join(
+    CO_VACANT_HOUSING
+  ) |>
+  left_join(
+    CO_HOUSING_UNITS
+  ) |>
+  mutate(
+    vacancy_rate = housing_units_vacant / housing_units,
+    necessary_units = (HH + MISSINGHH) / (1 - target_vacancy_rate),
+    available_units = housing_units -
+      housing_units_seasonal -
+      replace_na(housing_units_uninhabitable, 0),
+    underproduction = necessary_units - available_units
+  ) |>
+  select(
+    YEAR,
+    msa,
+    HH,
+    NEWHH,
+    MISSINGHH,
+    underproduction
+  ) |>
+  arrange(YEAR, msa)
 
-SIMPLE_UNDERPROD <- (SIMPLE_MISSING_HH +
-  CO_HOUSING_UNITS[[as.character(analysis_year)]]) /
-  (1 - VACANCY_RATE) -
-  CO_HOUSING_UNITS[[as.character(analysis_year)]] -
-  CO_SEASONAL_HOUSING[[as.character(analysis_year)]]
-
-simple_target_hh_df
-
-# hh_df |>
-#   filter(YEAR == baseline_year | YEAR == analysis_year) |>
-#   filter(RELATE == 1 & STATEFIP == 8) |>
-#   mutate(
-#     HCOSTQ = cut(
-#       HCOSTRATIO,
-#       c(0, .35, .60, Inf),
-#       labels = c("0-35%", "35-60%", ">60%")
-#     )
-#   ) |>
-#   group_by(YEAR, HCOSTQ) |>
-#   summarize(P = sum(HHWT), .groups = "drop_last") |>
-#   mutate(P = P / sum(P) * 100) |>
-#   ungroup() |>
-#   pivot_wider(names_from = YEAR, values_from = P)
-# ```
-
-# One way we could build a headship rate counterfactual is by saying would would the headship rate be today if housing costs were more similar to what they were in 2000. This is an improvement in that we can now capture the relationship between housing costs and headship rate, however, it still ignores the relationship between many other variables and headship rates which have changed over time. A way to account for both changing housing cost burden and other variables exists in the 3-way Kitigawa or Oaxaca-Blinder [decomposition](https://giacomovagni.com/blog/2023/oaxaca/) method. This methodology has been used in several other housing studies, such as those done by [Freddie Mac](https://www.freddiemac.com/research/insight/20181205-major-challenge-to-u.s.-housing-supply) and [Brookings](https://www.brookings.edu/articles/make-it-count-measuring-our-housing-supply-shortage/), and allow an analyst to isolate the impact of a single variable on an outcome by shifting that variables value to something it had resembled previously.
-
-# ## The housing burden effect
-
-# $Y$ is the headship status and $X$ is a set of explanatory variables.
-
-# $$
-# Y_{\text{baseline}} \sim \text{Binomial}(\theta_{\text{baseline}}) \\
-# \text{logit}(\theta_{\text{baseline}}) = \zeta_\text{baseline} X_\text{baseline}^{\text{Housing Burden}} + \mathbf{\beta}_\text{baseline} \mathbf{X}_\text{baseline} \\
-# Y_{\text{current}} \sim \text{Binomial}(\theta_{\text{current}}) \\
-# \text{logit}(\theta_{\text{current}}) = \zeta_\text{current} X_\text{current}^{\text{Housing Burden}} + \mathbf{\beta}_\text{current} \mathbf{X}_\text{current}
-# $$
-
-# ## Housing Cost Counterfactual
-
-# $$
-# \text{logit}(\theta_{\text{counterfactual}}) = \zeta_\text{current} X_\text{baseline}^{\text{Housing Burden}} + \mathbf{\beta}_\text{current} \mathbf{X}_\text{current}
-# $$
-
-# Note for the counter factual that this change is equivalent to adding the endowment or explained effect of the decomposition for housing cost to $Y_{\text{current}}$. By applying the counterfactual prediction to each observation in our dataset we can then arrive at a new $\text{HR}^*$ which is driven by changing housing cost burden. The table below shows how the model based approach for $\text{HR}^*$ differ from either the observed 2000 or 2023 values.
-
-# ```{r}
-# superset_df <- hh_df |>
-#   filter(YEAR %in% c(analysis_year, baseline_year)) |>
-#   filter(AGE >= minimum_age & AGE <= maximum_age) |>
-#   filter(STATEFIP == 8) |>
-#   mutate(MARRIED = MARST %in% c(1, 2)) |>
-#   mutate(LABFORCE = LABFORCE == 2) |>
-#   mutate(HSEDU = EDUC >= 6 & EDUC < 10) |>
-#   mutate(COLEDU = EDUC >= 10) |>
-#   mutate(TRIGEN = MULTGEN > 2) |>
-#   select(
-#     YEAR,
-#     HEADSHIP,
-#     PERWT,
-#     AGEGROUP,
-#     HOUSINGCOST,
-#     NCHILD,
-#     MARRIED,
-#     LABFORCE,
-#     INCTOT,
-#     HSEDU,
-#     COLEDU,
-#     TRIGEN,
-#     HCOSTRATIO
-#   )
-
-# fm_anlyz_df <- superset_df |>
-#   # remove individuals who dont make sense to analysis
-#   filter(PERWT != 0, YEAR == analysis_year) |>
-#   mutate(HEADSHIP = as.integer(HEADSHIP))
-
-# design_anlyz_df <- svydesign(ids = ~1, weights = ~PERWT, data = fm_anlyz_df)
-
-# cf_houscost_df <- superset_df |>
-#   # remove individuals who dont make sense to analysis
-#   filter(PERWT != 0, YEAR == baseline_year) |>
-#   group_by(AGEGROUP) |>
-#   summarize(
-#     HCOSTRATIO = weighted.median(HCOSTRATIO, PERWT, na.rm = TRUE),
-#     .groups = "drop"
-#   ) |>
-#   right_join(
-#     superset_df |>
-#       filter(YEAR == analysis_year) |>
-#       select(-HCOSTRATIO),
-#     by = "AGEGROUP"
-#   )
-
-# design_anlyz_df <- svydesign(ids = ~1, weights = ~PERWT, data = fm_anlyz_df)
-
-# model_list <- list(
-#   age_lm = svyglm(
-#     HEADSHIP ~ AGEGROUP,
-#     design = design_anlyz_df,
-#     family = binomial
-#   ),
-#   base_lm = svyglm(
-#     HEADSHIP ~ log(HCOSTRATIO) * AGEGROUP,
-#     design = design_anlyz_df,
-#     family = binomial
-#   ),
-#   famcomp_lm = svyglm(
-#     HEADSHIP ~ (log(HCOSTRATIO) + MARRIED + NCHILD + TRIGEN) * AGEGROUP,
-#     design = design_anlyz_df,
-#     family = binomial
-#   ),
-#   incedu_lm = svyglm(
-#     HEADSHIP ~ (log(HCOSTRATIO) + LABFORCE + HSEDU + COLEDU) * AGEGROUP,
-#     design = design_anlyz_df,
-#     family = binomial
-#   ),
-#   full_lm = svyglm(
-#     HEADSHIP ~
-#       (log(HCOSTRATIO) +
-#         MARRIED +
-#         NCHILD +
-#         TRIGEN +
-#         LABFORCE +
-#         HSEDU +
-#         COLEDU) *
-#         AGEGROUP,
-#     design = design_anlyz_df,
-#     family = binomial
-#   )
-# )
-
-# model_pred_df <- bind_rows(lapply(names(model_list), function(ln) {
-#   cf_houscost_df |>
-#     mutate(
-#       NEWHR = as.vector(predict(
-#         model_list[[ln]],
-#         newdata = cf_houscost_df,
-#         type = "response"
-#       ))
-#     ) |>
-#     mutate(MODEL = ln)
-# }))
-
-# model_pred_df |>
-#   group_by(AGEGROUP, MODEL) |>
-#   summarize(HR = weighted.mean(NEWHR, PERWT), .groups = "drop") |>
-#   pivot_wider(names_from = MODEL, values_from = HR) |>
-#   select(AGEGROUP, `Model Based` = full_lm) |>
-#   left_join(co_hr_table, by = "AGEGROUP")
-
-# ```
-
-# A noticeable difference between this model based approach and simply using the Headship Rates observed in 2020 is where the difference in observed and target headship rates lay. The model based approach puts more of the missingness of households into younger populations rather than older populations.
-
-# ```{r}
-
-# target_hh_df <- hh_df |>
-#   filter(YEAR == analysis_year & PERWT != 0) |>
-#   filter(AGE >= 15 & AGE <= maximum_age) |>
-#   filter(STATEFIP == 8) |>
-#   group_by(AGEGROUP) |>
-#   summarize(HH = sum(PERWT * HEADSHIP)) |>
-#   left_join(
-#     hh_df |>
-#       filter(YEAR == analysis_year & PERWT != 0) |>
-#       filter(AGE < minimum_age & AGE >= 15) |>
-#       filter(STATEFIP == 8) |>
-#       mutate(NEWHR = .04) |>
-#       group_by(AGEGROUP) |>
-#       summarize(NEWHH = sum(PERWT * NEWHR)) |>
-#       bind_rows(
-#         model_pred_df |>
-#           filter(MODEL == "full_lm") |>
-#           group_by(AGEGROUP) |>
-#           summarize(NEWHH = sum(PERWT * NEWHR))
-#       ),
-#     by = join_by(AGEGROUP)
-#   ) |>
-#   mutate(MISSINGHH = NEWHH - HH)
-
-# target_hh_df
-# ```
-
-# ```{r}
-# CO_MISSING_HH_DECOMP <- sum(target_hh_df$MISSINGHH)
-
-# CO_UNDERPOD_DECOMP <- (sum(target_hh_df$MISSINGHH) + CO_HOUSEHOLDS) /
-#   (1 - VACANCY_RATE) -
-#   (CO_HOUSING_UNITS - CO_SEASONAL_HOUSING - CO_UNIHABITABLE_HOUSING)
-# ```
-
-# From these calculations we find that Colorado has `r prettyNum(round(CO_MISSING_HH ), big.mark = ",")` missing households which leads to a housing underproduction count of `r prettyNum(round(CO_UNDERPOD), big.mark = ",")` units.
-
-# To demonstrate in another way what this model is doing and show its flexibility lets pick another value for housing burden to see its impact on the housing shortage estimate. Let us say instead that we think all individuals should be paying 100% of their income on housing costs. We can place this into the model as follows.
-
-# ```{r}
-# cf_all_income <- hh_df |>
-#   filter(YEAR == analysis_year & PERWT != 0) |>
-#   filter(AGE >= 15 & AGE <= maximum_age) |>
-#   filter(STATEFIP == 8) |>
-#   group_by(AGEGROUP) |>
-#   summarize(HH = sum(PERWT * HEADSHIP)) |>
-#   right_join(
-#     superset_df |>
-#       filter(YEAR == analysis_year) |>
-#       mutate(HCOSTRATIO = 1) %>%
-#       mutate(
-#         NEWHR = predict(
-#           model_list[["full_lm"]],
-#           newdata = .,
-#           type = "response"
-#         )
-#       ) |>
-#       group_by(AGEGROUP) |>
-#       summarize(NEWHH = sum(PERWT * NEWHR)),
-#     by = join_by(AGEGROUP)
-#   ) |>
-#   mutate(MISSINGHH = NEWHH - HH) |>
-#   pull(MISSINGHH) |>
-#   sum()
-# ```
-
-# When we do this our model tells us that we actually have to much housing! That is if you want the citizens of Colorado to spend more of their income on housing we need to get rid of `r prettyNum(round(-cf_all_income), big.mark = ",")` units.
-
-# Alternatively, what if we wanted a scenario where individuals only spent 10% of their income on housing, what then would the housing shortage be?
-
-# ```{r}
-# cf_ten_income <- hh_df |>
-#   filter(YEAR == analysis_year & PERWT != 0) |>
-#   filter(AGE >= 15 & AGE <= maximum_age) |>
-#   filter(STATEFIP == 8) |>
-#   group_by(AGEGROUP) |>
-#   summarize(HH = sum(PERWT * HEADSHIP)) |>
-#   right_join(
-#     superset_df |>
-#       filter(YEAR == analysis_year) |>
-#       mutate(HCOSTRATIO = .1) |>
-#       mutate(
-#         NEWHR = predict(
-#           model_list[["full_lm"]],
-#           newdata = .,
-#           type = "response"
-#         )
-#       ) |>
-#       group_by(AGEGROUP) |>
-#       summarize(NEWHH = sum(PERWT * NEWHR)),
-#     by = join_by(AGEGROUP)
-#   ) |>
-#   mutate(MISSINGHH = NEWHH - HH) |>
-#   pull(MISSINGHH) |>
-#   sum()
-# ```
-
-# In this case the model says we would need to add `r prettyNum(round(cf_ten_income), big.mark = ",")` units to Colorado's housing total.
+statewide_totals <- metro_totals |>
+  summarize(
+    HH = sum(HH),
+    NEWHH = sum(NEWHH),
+    MISSINGHH = sum(MISSINGHH),
+    underproduction = sum(underproduction),
+    .by = YEAR
+  ) |>
+  arrange(YEAR)
