@@ -233,14 +233,6 @@ metro_totals <- simple_target_hh_df |>
       replace_na(housing_units_uninhabitable, 0),
     underproduction = necessary_units - available_units
   ) |>
-  select(
-    YEAR,
-    msa,
-    HH,
-    NEWHH,
-    MISSINGHH,
-    underproduction
-  ) |>
   arrange(YEAR, msa)
 
 statewide_totals <- metro_totals |>
@@ -248,7 +240,11 @@ statewide_totals <- metro_totals |>
     HH = sum(HH),
     NEWHH = sum(NEWHH),
     MISSINGHH = sum(MISSINGHH),
+    necessary_units = sum(necessary_units),
+    available_units = sum(available_units),
     underproduction = sum(underproduction),
     .by = YEAR
   ) |>
   arrange(YEAR)
+
+write_csv(statewide_totals, "statewide_totals.csv")
