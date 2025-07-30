@@ -193,7 +193,7 @@ simple_target_hh_df <- hh_df |>
   summarise(
     NEWHH_ = sum(NEWHH * PERWT),
     HH = sum(HEADSHIP * PERWT),
-    .by = c(msa, AGEGROUP, MET2013, age_dummy, YEAR)
+    .by = c(msa, AGEGROUP, MET2013, PUMA, age_dummy, YEAR)
   ) |>
   mutate(
     NEWHH = if_else(
@@ -237,14 +237,15 @@ metro_totals <- simple_target_hh_df |>
 
 statewide_totals <- metro_totals |>
   summarize(
-    HH = sum(HH),
-    NEWHH = sum(NEWHH),
-    MISSINGHH = sum(MISSINGHH),
-    necessary_units = sum(necessary_units),
-    available_units = sum(available_units),
-    underproduction = sum(underproduction),
+    across(-c(msa), \(x) sum(x, na.rm = TRUE)),
     .by = YEAR
   ) |>
-  arrange(YEAR)
+  mutate(
+    msa = "Colorado Statewide",
+    .after = YEAR
+  )
 
-write_csv(statewide_totals, "statewide_totals.csv")
+all_totals <- metro_totals |>
+  bind_rows(statewide_totals)
+
+write_csv(all_totals, "all_totals.csv")
