@@ -69,7 +69,7 @@ acs_samples <- get_sample_info("usa") |>
   pull(name)
 
 ipums_dir <- "data/ipums_raw/"
-ipums_ddi <- "usa_00081.xml"
+ipums_ddi <- "usa_00099.xml"
 file_loc <- paste0(
   ipums_dir,
   ipums_ddi
@@ -184,20 +184,20 @@ In order to broadly analyze survey data, and additionally calculate margin of er
 # create survey design object
 acs_hh_data <- acs_00_23$HOUSEHOLD |>
   # remove GQ units and vacant units 4-6
-  filter(
-    GQ %in% c(0, 1, 2, 5) & !(VACANCY %in% c(4:6, 7, 9))
-  ) |>
+  # filter(
+  #   GQ %in% c(0, 1, 2, 5) & !(VACANCY %in% c(4:6, 7, 9))
+  # ) |>
   # reclassify 3 to 0 and 4-6 to 3
-  mutate(
-    VACANCY = lbl_relabel(
-      VACANCY,
-      0 ~ .val == 3
-    ),
-    OWNERSHP = lbl_relabel(
-      OWNERSHP,
-      lbl(0, "Vacant") ~ .val == 0
-    )
-  ) |>
+  # mutate(
+  #   VACANCY = lbl_relabel(
+  #     VACANCY,
+  #     0 ~ .val == 3
+  #   ),
+  #   OWNERSHP = lbl_relabel(
+  #     OWNERSHP,
+  #     lbl(0, "Vacant") ~ .val == 0
+  #   )
+  # ) |>
   as_factor(levels = "values") |>
   as_duckplyr_tibble()
 
@@ -226,16 +226,22 @@ In combining vacancy rates a `tenure` variable is created to determine if a unit
 
 # calculate vacancy
 acs_vacancy <- acs_hh_srvy |>
-  group_by(VACANCY, YEAR) |>
+  filter(YEAR == 2023) |>
+  group_by(VACANCY, YEAR, PUMA) |>
   survey_count(VACANCY, name = "vac") |>
   mutate(
+    VACANCY = factor(
+      VACANCY,
+      levels = attr(acs_00_23$HOUSEHOLD$VACANCY, "labels") |> as.numeric(),
+      labels = attr(acs_00_23$HOUSEHOLD$VACANCY, "labels") |> names()
+    ),
     vac_moe = vac_se * 1.645,
-    tenure = case_when(
-      VACANCY == 1 ~ "rent",
-      VACANCY == 2 ~ "own"
-    )
+    # tenure = case_when(
+    #   VACANCY == 1 ~ "rent",
+    #   VACANCY == 2 ~ "own"
+    # )
   ) |>
-  filter(!is.na(tenure)) |>
+  # filter(!is.na(tenure)) |>
   ungroup()
 
 # calculate occupied
