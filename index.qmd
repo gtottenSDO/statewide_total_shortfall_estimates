@@ -9,7 +9,6 @@ html:
   include-in-header:
     - text: |
         <meta name="robots" content="noindex">
-
 ---
 
 ```{r}
@@ -211,7 +210,7 @@ acs_hh_srvy <- acs_hh_data |>
 
 ```
 
-Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as $ \sum VACANT_{ot} \over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
+Then total up on an annual basis the total occupied units each for sale and for rent, as well as vacant units by for sale or for rent[^2]\[\^margin of error are calculated as 1.645 \* standard error consistent with 90% CI\]. We additionally calculate total occupied and total vacant as the sum of each of these. Vacancy rates are then calculated as \$ \sum VACANT\_{ot} \over {\sum VACANT_{ot}+ \sum OCCUPIED_{ot}}\$ for each occupancy status $o$ and year $t$. Finally we calculate the sum total of occupied and vacant units for each year[^3].
 
 [^2]: For this purpose we make the assumption that `VACANCY == 1` (For rent or sale) is for Rent, and `VACANCY ==2` (For sale only) is for sale in order to the simplify the analysis.
 
@@ -394,7 +393,7 @@ acs_hr_srvy <- acs_hr_data |>
   )
 ```
 
-``` {r}
+```{r}
 #| label: calc-acs-hr
 
 # calculate headship rates for each age group for each year from 2000-2023
@@ -515,7 +514,7 @@ acs_headship_rates |>
 
 As a follow up we compare the ACS estimates from implied estimates using SDO data from 2010 on, based on the Household Projections created by SDO. Both household and population by age data data is pulled from the SDO Postgres using tables `estimates.household_projections` and `county_census_grouping_ya_region`.
 
-``` {r}
+```{r}
 #| label: connect_pg_sdo
 
 library(DBI)
@@ -535,7 +534,7 @@ connections::connection_view(sdo_postgres)
 
 ```
 
-``` {r}
+```{r}
 #| label: calc_sdo_hr
 
 sdo_hh_proj <- tbl(
@@ -601,7 +600,7 @@ sdo_combined <- sdo_hh_proj |>
 
 Next we recalculate the ACS data using SDO Age Groups ("18 to 24", "25 to 44", "45 to 64", "65+") so we can compare against SDO households and headship rates.
 
-``` {r}
+```{r}
 #| label: calc_hr_acs_sdo
 
 acs_hr_tot_persons_sdo <- acs_hr_srvy |>
