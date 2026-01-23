@@ -238,7 +238,7 @@ simple_target_hh_df <- hh_df |>
     YEAR == baseline_year
   ) |>
   summarise(
-    NEWHH = weighted.mean(HEADSHIP, PERWT), # This is the baseline headship rate.
+    NEWHR = weighted.mean(HEADSHIP, PERWT), # This is the baseline headship rate.
     .by = c(msa, AGEGROUP, MET2013, age_dummy)
   ) |>
   # Step 2: Join the baseline headship rates back to the full Colorado person-level data.
@@ -249,10 +249,10 @@ simple_target_hh_df <- hh_df |>
   # Step 3: Calculate actual vs. hypothetical households for each year.
   summarise(
     # Hypothetical households if baseline headship rates applied to today's population.
-    NEWHH_ = sum(NEWHH * PERWT),
+    NEWHH_ = sum(NEWHR * PERWT),
     # Actual number of households today.
     HH = sum(HEADSHIP * PERWT),
-    .by = c(msa, AGEGROUP, MET2013, PUMA, age_dummy, YEAR)
+    .by = c(msa, AGEGROUP, MET2013, NEWHR, PUMA, age_dummy, YEAR)
   ) |>
   # Step 4: Determine the target number of households.
   mutate(
