@@ -216,7 +216,6 @@ co_hr_table <- hh_df |>
 # -----------------------------------------------------------------------------
 
 # Set key parameters for the analysis.
-analysis_year <- 2021
 baseline_year <- 2000 # The year whose headship rates will be used as a benchmark.
 minimum_age <- 18
 maximum_age <- 45
