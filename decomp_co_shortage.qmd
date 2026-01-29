@@ -112,7 +112,7 @@ CO_HOUSING_UNITS <- housing_df |>
   pull(n, name = "YEAR")
 ```
 
-From the survey data we find that in 2023 there were a total of `r prettyNum(CO_HOUSING_UNITS, big.mark = ",")`. Next we will want to calculate the number of second and seasonal homes. ACS survey data has a response which directly corresponds to this which is homes that are "For seasonal, recreational or other occasional use". This is also what the State of Oregon uses for their own [housing needs analysis](https://www.oregon.gov/das/oea/Documents/OHNA-Methodology-Report-2024.pdf) which closely follows the Up for Growth Methodology. For uninhabitable housing we again follow the state of Oregon's approach using houses which either have no kitchen or lack complete plumbing and which have been vacant for over 12 months.
+From the survey data we find that in 2023 there were a total of `r prettyNum(CO_HOUSING_UNITS[["2023"]], big.mark = ",")`. Next we will want to calculate the number of second and seasonal homes. ACS survey data has a response which directly corresponds to this which is homes that are "For seasonal, recreational or other occasional use". This is also what the State of Oregon uses for their own [housing needs analysis](https://www.oregon.gov/das/oea/Documents/OHNA-Methodology-Report-2024.pdf) which closely follows the Up for Growth Methodology. For uninhabitable housing we again follow the state of Oregon's approach using houses which either have no kitchen or lack complete plumbing and which have been vacant for over 12 months.
 
 ```{r}
 CO_SEASONAL_HOUSING <- housing_df |>
@@ -130,7 +130,7 @@ CO_UNIHABITABLE_HOUSING <- housing_df |>
 
 ```
 
-Using these definitions we find that Colorado has `r prettyNum(CO_SEASONAL_HOUSING, big.mark = ",")` seasonal housing units and `r prettyNum(CO_UNIHABITABLE_HOUSING, big.mark = ",")` uninhabitable housing units. The table below shows how the distribution of these housing types differs between Colorado and the US as a whole. We can see that relative to the US, Colorado has more 2nd and vacation house, but less uninhabitable housing.
+Using these definitions we find that Colorado has `r prettyNum(CO_SEASONAL_HOUSING[["2023"]], big.mark = ",")` seasonal housing units and `r prettyNum(CO_UNIHABITABLE_HOUSING[["2023"]], big.mark = ",")` uninhabitable housing units. The table below shows how the distribution of these housing types differs between Colorado and the US as a whole. We can see that relative to the US, Colorado has more 2nd and vacation house, but less uninhabitable housing.
 
 ```{r}
 housing_df |>
