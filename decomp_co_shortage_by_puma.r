@@ -5,6 +5,7 @@
 library(tidyverse)
 library(ipumsr)
 library(duckplyr)
+library(srvyr)
 
 # -----------------------------------------------------------------------------
 # This entire section is commented out. It contains the code used to define,
@@ -17,10 +18,10 @@ library(duckplyr)
 # ddi63 <- read_ipums_ddi("./data/ipums_raw/usa_00063.xml")
 # ddi64 <- read_ipums_ddi("./data/ipums_raw/usa_00064.xml")
 # ddi93 <- read_ipums_ddi("./data/ipums_raw/usa_00093.xml")
-#
+
 # # Example of how to view value labels for a variable.
 # # ipums_val_labels(ddi63, "YEAR")
-#
+
 # # Combine variable names from different DDI files to create a master list.
 # ipums_var_list <- ipums_var_info(ddi63) |>
 #   bind_rows(
@@ -33,19 +34,22 @@ library(duckplyr)
 #   append(list(
 #     "MET2013", # Metropolitan area for 2013 definitions.
 #     "MET2013ERR", # Error code for MET2013.
+#     # Add replicate weights for variance estimation (if needed for future analysis).
+#     "REPWT", # Household Replicate Weights (for households)
+#     "REPWTP", # Person Replicate Weights (for persons)
 #     # Specify STATEFIP but select only cases for Colorado (FIPS code 08).
 #     var_spec(
 #       name = "STATEFIP",
 #       case_selections = "08"
 #     )
 #   ))
-#
+
 # # Get a list of all 1-year ACS sample names from IPUMS.
 # ipums_samples <- get_sample_info("usa") |>
 #   # Filter to get samples that match the ACS 1-year naming convention (e.g., "us2021a").
 #   filter(str_detect(name, "us2\\d{3}a")) |>
 #   pull(name) # Extract the sample names.
-#
+
 # # Define the data extract request for IPUMS.
 # ipums_extract <- define_extract_micro(
 #   collection = "usa",
@@ -55,11 +59,11 @@ library(duckplyr)
 #   case_select_who = "households", # Select data at the household level.
 #   data_structure = "hierarchical" # Required to get data on vacant households.
 # )
-#
+
 # # Submit the extract request to the IPUMS server.
 # ipums_extract_submitted <- ipums_extract |>
 #   submit_extract()
-#
+
 # # Wait for the extract to be prepared and then download it to the specified directory.
 # ipums_extract_submitted |>
 #   wait_for_extract() |>
@@ -73,7 +77,7 @@ library(duckplyr)
 
 # Read the IPUMS data extract (which contains both household and person-level data).
 # The result is a list with separate data frames for each record type.
-ipums_data <- read_ipums_micro_list("./data/ipums_raw/usa_00099.xml")
+ipums_data <- read_ipums_micro_list("./data/ipums_raw/usa_00112.xml")
 
 # Prepare the HOUSEHOLD level dataframe.
 housing_df <- ipums_data$HOUSEHOLD |>
@@ -101,33 +105,41 @@ housing_df <- ipums_data$HOUSEHOLD |>
   # Define all vacant housing units.
   mutate(VACANT = VACANCY != 0)
 
+# Create housing survey design object based on ipums data
+housing_svy <- housing_df |>
+  as_survey_design(
+    weight = HHWT, # Household weight variable for survey design.
+    repweights = matches("REPWT[0-9]+"), # Replicate weights for variance estimation.
+    type = "ACS",
+    mse = TRUE # Indicates that the replicate weights are for mean squared error estimation (ACS uses a specific method for variance estimation).
+  )
 # -----------------------------------------------------------------------------
 # Calculate Aggregate Housing Statistics for Colorado
 # -----------------------------------------------------------------------------
 
 # Calculate total housing units per year and MSA, using household weights (HHWT).
-CO_HOUSING_UNITS <- housing_df |>
-  count(YEAR, msa, wt = HHWT, name = "housing_units")
+CO_HOUSING_UNITS <- housing_svy |>
+  survey_count(YEAR, msa, name = "housing_units")
 
 # Calculate total seasonal housing units.
-CO_SEASONAL_HOUSING <- housing_df |>
+CO_SEASONAL_HOUSING <- housing_svy |>
   filter(SEASONAL) |>
-  count(YEAR, msa, wt = HHWT, name = "housing_units_seasonal")
+  survey_count(YEAR, msa, name = "housing_units_seasonal")
 
 # Calculate total uninhabitable housing units.
-CO_UNIHABITABLE_HOUSING <- housing_df |>
+CO_UNIHABITABLE_HOUSING <- housing_svy |>
   filter(UNIHABITABLE) |>
-  count(YEAR, msa, wt = HHWT, name = "housing_units_uninhabitable")
+  survey_count(YEAR, msa, name = "housing_units_uninhabitable")
 
 # Calculate total vacant-and-available housing units.
-CO_VACANT_HOUSING <- housing_df |>
+CO_VACANT_HOUSING <- housing_svy |>
   filter(VACAVAIL) |>
-  count(YEAR, msa, wt = HHWT, name = "housing_units_vacant")
+  survey_count(YEAR, msa, name = "housing_units_vacant")
 
 # Calculate the total number of occupied households in Colorado (STATEFIP 8, VACANCY 0).
-CO_HOUSEHOLDS <- housing_df |>
+CO_HOUSEHOLDS <- housing_svy |>
   filter(STATEFIP == 8 & VACANCY == 0) |>
-  count(YEAR, msa, wt = HHWT)
+  survey_count(YEAR, msa, name = "households")
 
 # -----------------------------------------------------------------------------
 # Prepare Inflation Adjustment Data
@@ -154,6 +166,14 @@ person_df <- ipums_data$PERSON |>
   select(-RECTYPE) |>
   # Create a binary variable for head of household (RELATE code 1).
   mutate(HEADSHIP = RELATE == 1)
+
+# Set key parameters for the analysis.
+analysis_year <- 2024
+baseline_year <- 2000 # The year whose headship rates will be used as a benchmark.
+minimum_age <- 18
+maximum_age <- 45
+target_vacancy_rate <- .05 # A 5% target vacancy rate for a healthy housing market.
+
 
 # Create the main analysis dataframe by joining household and person data.
 hh_df <- housing_df |>
@@ -200,14 +220,29 @@ hh_df <- housing_df |>
   mutate(INCTOT = if_else(INCTOT < 1, 1, INCTOT)) |>
   mutate(HOUSINGCOST = if_else(HOUSINGCOST < 1, 1, HOUSINGCOST)) |>
   # Calculate the housing cost to income ratio (annualized).
-  mutate(HCOSTRATIO = HOUSINGCOST / (INCTOT) * 12)
+  mutate(HCOSTRATIO = HOUSINGCOST / (INCTOT) * 12) |>
+  mutate(
+    age_dummy = (AGE >= minimum_age & AGE < maximum_age)
+  ) |>
+  relocate(msa, .after = MET2013) # Move MSA column for better readability.
+
+# Create hh srvy object for survey analysis on the combined household-person data.
+hh_svy <- hh_df |>
+  as_survey_design(
+    weight = PERWT, # Person weight variable for survey design.
+    repweights = matches("REPWTP[0-9]+"), # Replicate weights for variance estimation.
+    type = "ACS",
+    mse = TRUE # Indicates that the replicate weights are for mean squared error estimation (ACS uses a specific method for variance estimation).
+  )
 
 # Create a table showing the headship rate (propensity to be head of household) by age group over the years.
-co_hr_table <- hh_df |>
+co_hr_table <- hh_svy |>
   filter(STATEFIP == 8, AGE >= 15) |> # Filter for Colorado residents age 15+.
   group_by(AGEGROUP, YEAR) |>
   # Calculate the weighted mean headship rate using person weights (PERWT).
-  summarise(HEADSHIP = weighted.mean(HEADSHIP, PERWT), .groups = "drop") |>
+  summarise(HEADSHIP = survey_mean(HEADSHIP, na.rm = TRUE), .groups = "drop") |>
+  # Pivot Headship and _se to have years as columns for easier comparison.
+  pivot_longer(cols = starts_with("HEADSHIP"), names_to = "TYPE", values_to = "HEADSHIP") |>
   # Reshape data to have years as columns for easy comparison.
   pivot_wider(names_from = YEAR, values_from = HEADSHIP)
 
@@ -215,19 +250,7 @@ co_hr_table <- hh_df |>
 # Housing Shortage Calculation
 # -----------------------------------------------------------------------------
 
-# Set key parameters for the analysis.
-analysis_year <- 2021
-baseline_year <- 2000 # The year whose headship rates will be used as a benchmark.
-minimum_age <- 18
-maximum_age <- 45
-target_vacancy_rate <- .05 # A 5% target vacancy rate for a healthy housing market.
 
-# Add a dummy variable to the main dataframe to flag the target age group.
-hh_df <- hh_df |>
-  mutate(
-    age_dummy = (AGE >= minimum_age & AGE < maximum_age)
-  ) |>
-  relocate(msa, .after = MET2013) # Move MSA column for better readability.
 
 # This is the core logic to estimate "missing households".
 # It compares current headship rates to a baseline year's rates.
