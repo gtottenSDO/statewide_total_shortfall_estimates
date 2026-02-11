@@ -10,3 +10,5 @@ data/ipums_raw/usa_00063.dat.gz
 /index_cache/
 desktop.ini
 data/ipums_raw/
+data/hh_00112.parquet
+data/person_00112.parquet
