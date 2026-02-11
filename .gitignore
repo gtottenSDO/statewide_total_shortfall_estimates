@@ -5,6 +5,8 @@
 .Rproj
 /.quarto/
 data/ipums_raw/Data/archive/
+data/ipums_raw/usa_00081.dat.gz
+data/ipums_raw/usa_00063.dat.gz
 /index_cache/
 desktop.ini
 data/ipums_raw/

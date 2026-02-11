@@ -1,0 +1,28 @@
+project:
+  type: manuscript
+  output-dir: docs
+
+manuscript:
+  article: index.qmd
+
+format:
+  html:
+    comments:
+      hypothesis: true
+    search: false
+    robots: noindex
+    include-in-header:
+      - text: |
+          <meta name="robots" content="noindex">
+
+  docx: default
+  # jats: default
+
+  # (other formats)
+  # pdf: default
+
+execute:
+  cache: true
+  freeze: false
+
+
