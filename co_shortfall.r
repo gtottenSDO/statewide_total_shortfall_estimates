@@ -77,15 +77,39 @@ library(srvyr)
 
 # Read the IPUMS data extract (which contains both household and person-level data).
 # The result is a list with separate data frames for each record type.
+
+ipums_file_num <- "00112" # Update this number based on the actual file downloaded from IPUMS.
+
+# check to see if the parquet files already exist before reading the raw data
+if (!file.exists(paste0("./data/household_", ipums_file_num, ".parquet")) ||
+    !file.exists(paste0("./data/person_", ipums_file_num, ".parquet"))) {
+  # If the parquet files don't exist, read the raw IPUMS data and save it as parquet for faster future loading.
 ipums_data <- read_ipums_micro_list("./data/ipums_raw/usa_00112.xml")
+
+ipums_data$HOUSEHOLD |>
+  zap_ipums_attributes() |>
+  compute_parquet(path = "./data/household_00112.parquet")
+
+ipums_data$PERSON |>
+  zap_ipums_attributes() |>
+  compute_parquet(path = "./data/person_00112.parquet")
+  
+  rm(ipums_data) # Remove the original data from memory to free up space.
+  
+}
+
+ipums_data <- list(
+  HOUSEHOLD = read_parquet_duckdb(paste0("./data/household_", ipums_file_num, ".parquet")),
+  PERSON = read_parquet_duckdb(paste0("./data/person_", ipums_file_num, ".parquet"))
+)
+
+ipums_ddi <- read_ipums_ddi("./data/ipums_raw/usa_00112.xml") # Read the DDI file for metadata and variable information.
 
 # Prepare the HOUSEHOLD level dataframe.
 housing_df <- ipums_data$HOUSEHOLD |>
-  # Convert IPUMS-specific attributes (like labeled integers) to standard R data types.
-  zap_ipums_attributes() |>
   # Join with metropolitan area labels to get readable MSA names.
   left_join(
-    ipums_val_labels(ipums_data$HOUSEHOLD$MET2013) |>
+    ipums_val_labels(ipums_ddi, "MET2013") |>
       rename(MET2013 = val) |> # Rename columns for joining.
       rename(msa = lbl)
   ) |>
@@ -146,8 +170,7 @@ CO_HOUSEHOLDS <- housing_svy |>
 # -----------------------------------------------------------------------------
 
 # Read Consumer Price Index (CPI) data from a local CSV file.
-cpi_df <- "data/CPIAUCSL.csv" |>
-  read_csv(col_types = cols()) |>
+cpi_df <- read_csv_duckdb("data/CPIAUCSL.csv") |>
   # Extract the year from the date.
   mutate(YEAR = year(observation_date)) |>
   # Calculate the average CPI for each year.
@@ -162,7 +185,6 @@ cpi_df <- "data/CPIAUCSL.csv" |>
 
 # Prepare the PERSON level dataframe.
 person_df <- ipums_data$PERSON |>
-  zap_ipums_attributes() |>
   select(-RECTYPE) |>
   # Create a binary variable for head of household (RELATE code 1).
   mutate(HEADSHIP = RELATE == 1)
@@ -176,10 +198,10 @@ target_vacancy_rate <- .05 # A 5% target vacancy rate for a healthy housing mark
 
 
 # Create the main analysis dataframe by joining household and person data.
-hh_df <- housing_df |>
+hh_df <- collect(housing_df) |>
   # Join housing data to person data. A right_join keeps all persons.
   right_join(
-    person_df,
+    collect(person_df),
     by = c("YEAR", "SERIAL", "CBSERIAL", "SAMPLE") # Unique identifiers for a household.
   ) |>
   # Filter to the non-institutionalized population.
@@ -224,7 +246,10 @@ hh_df <- housing_df |>
   mutate(
     age_dummy = (AGE >= minimum_age & AGE < maximum_age)
   ) |>
-  relocate(msa, .after = MET2013) # Move MSA column for better readability.
+   # Move MSA column for better readability.
+  relocate(msa, .after = MET2013) |> 
+  # compute to parquet
+  compute_parquet(path = "./data/combined_household_person.parquet")
 
 # Create hh srvy object for survey analysis on the combined household-person data.
 hh_svy <- hh_df |>
@@ -339,3 +364,4 @@ all_totals <- metro_totals |>
 
 # Write the final results to a CSV file.
 write_csv(all_totals, "all_totals.csv")
+  
